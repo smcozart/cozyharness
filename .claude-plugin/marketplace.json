@@ -1,0 +1,11 @@
+{
+  "name": "cozycode",
+  "owner": { "name": "Sean Cozart" },
+  "plugins": [
+    {
+      "name": "engineering-workflow",
+      "source": "./plugin",
+      "description": "Six-phase AI-native SDLC: intent-first planning, GitHub-tracked tickets, ADRs, proof-over-claim verification."
+    }
+  ]
+}

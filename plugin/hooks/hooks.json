@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Workflow reminder: start from intent (the why), check for ready-for-agent tickets before picking up work, cite ADRs for decisions, and paste verification proof before closing anything. Full process: engineering-workflow skill.'"
+          }
+        ]
+      }
+    ]
+  }
+}
