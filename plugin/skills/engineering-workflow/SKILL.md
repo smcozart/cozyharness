@@ -50,17 +50,35 @@ The intent is the lighthouse — everything downstream is graded against it.
 The Plan artifact is the intent; any `plan.md` (execution sequencing) is
 written after Design, as Build preparation.
 
-## Design — structure the work, record the decisions
+## Design — spec, ADRs, tickets, and the approval gate
 
-1. **ADRs**: decisions that are hard to reverse, surprising without context, or
+1. **spec.md**: the spec for issue `#n` lives at
+   `intent/<n>-<slug>/spec.md`, a sibling of the intent (ADR 0001), its
+   header linking back to the issue and intent; the issue links to it by
+   path. Never copy the spec into the issue body. Required sections:
+   problem statement, requirements (user stories), design concerns
+   (modules/interfaces/seams), constraints (system/UX/security), testing
+   decisions, out of scope, open questions. Template:
+   `intent/TEMPLATE-spec.md`.
+2. **ADRs**: decisions that are hard to reverse, surprising without context, or
    real trade-offs get a one-paragraph record in `docs/adr/NNNN-slug.md`,
    committed and pushed immediately. Tech-stack preferences and conventions
-   live here too — shared brain for every agent.
-2. **Tickets**: break the intent into vertical-slice GitHub issues, blocking
-   edges declared in the body. Triage labels move issues through their state
-   machine; issues end as **`ready-for-agent`** (blockers resolved + acceptance
-   criteria defined). The label is a contract: no label, no work. The
-   linked-issue graph IS the design.
+   live here too — shared brain for every agent. Existing ADRs constrain new
+   design: contradictions are surfaced or superseded, never silently
+   overridden.
+3. **Tickets**: break the spec into vertical-slice sub-issues of the design
+   issue (ADR 0002), each with blocking edges declared in the body, runnable
+   acceptance criteria, and spec/ADR references. Triage labels move issues
+   through their state machine; issues end as **`ready-for-agent`** (blockers
+   resolved + acceptance criteria defined + spec approved). The label is a
+   contract: no label, no work. The linked-issue graph IS the design.
+4. **Approval gate**: ordinary design is approved conversationally in the
+   issue thread; high-risk work (security, data loss, irreversible
+   migrations, public contracts) needs explicit human sign-off in the issue
+   plus an ADR.
+5. **Build read order**: issue → spec → ADRs → `CONTEXT.md` → code.
+   Greenfield and brownfield run the same workflow; only the seed differs
+   (brief/PRD vs diagnosis/retro).
 
 ## Build — agents execute against the tracker
 

@@ -23,7 +23,8 @@ in hours, and **humans stay above the loop: instigating, directing, governing.**
 Plan ────► issue-first intake, then intent: the why (outcome, scope,
           non-goals) at intent/<issue-number>-<slug>/intent.md,
           aligned with SYSTEM-INTENT.md — human-approved
-Design ──► GitHub issues + blocking edges + labels + ADRs + tech-stack records
+Design ──► spec.md beside the intent; ADRs over the bar; vertical-slice
+          tickets as child issues with blocking edges; approval gate
 Build ───► one ticket per agent session; workers cite ADRs, write ADRs
 Test ────► verification commands + output pasted into the closing issue
 Deploy ──► branch protection is the gate
@@ -52,6 +53,8 @@ labels and ADR layout. Full detail: `plugin/README.md` and
 |---|---|
 | `docs/engineering-workflow.md` | The canonical process document |
 | `docs/adr/` | Architecture decision records — the system's memory |
+| `CONTEXT.md` | Shared domain vocabulary — the glossary every artifact uses |
+| `intent/` | Work-item intents (`TEMPLATE.md`) and specs (`TEMPLATE-spec.md`) |
 | `docs/agents/` | Per-repo agent config (tracker, labels, domain docs) |
 | `plugin/` | Claude Code plugin (skills + session hook) |
 | `bootstrap.sh` | One-command setup on any machine |

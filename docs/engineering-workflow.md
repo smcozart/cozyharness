@@ -63,13 +63,78 @@ Both flows share this contract: **greenfield** seeds the intent from the brief
 or PRD against SYSTEM-INTENT.md; **brownfield** seeds it from the diagnosis,
 retro finding, or transcript, and checks it against the same system intent.
 
+## Design — spec.md, ADRs, tickets, and the approval gate
+
+Formalized in issue [#3](https://github.com/smcozart/cozyharness/issues/3).
+Design turns an approved intent into three durable artifacts — a spec, the
+ADRs the design requires, and ticket issues — then passes the approval gate
+that moves work toward `ready-for-agent`.
+
+1. **spec.md lives next to the intent.** The spec for issue `#n` is
+   `intent/<n>-<slug>/spec.md`, a sibling of `intent.md` (ADR 0001). The
+   issue body links to it by path; the spec header links back to the issue
+   and intent. Never copy spec content into the issue body — reference by
+   path only, so no stale duplicate can exist.
+2. **spec.md required sections** (template + worked example:
+   [`intent/TEMPLATE-spec.md`](../intent/TEMPLATE-spec.md)): Problem
+   statement · Requirements (numbered user stories) · Design concerns
+   (modules, interfaces, test seams — no file paths or code, except
+   decision-encoding prototype snippets) · Constraints (system / UX /
+   security — an empty security section is a claim; write "none: <why>") ·
+   Testing decisions · Out of scope · Open questions (each with an owner;
+   none blocking at approval time).
+3. **Vocabulary comes from CONTEXT.md.** Specs and ticket titles name
+   concepts exactly as root [`CONTEXT.md`](../CONTEXT.md) defines them; a
+   term resolved during Design is added to the glossary in the same commit.
+   A missing term is a signal: you're inventing language, or you found a
+   real gap for `domain-modeling`.
+4. **ADRs participate in Design.** A design decision that is hard to
+   reverse, surprising without context, and a real trade-off gets an ADR in
+   `docs/adr/NNNN-slug.md`, committed and pushed immediately. The ADR names
+   the issue it decides for; the spec header lists the ADRs it follows.
+   Existing ADRs constrain new design: a contradiction is either surfaced
+   explicitly in the spec or resolved by a new ADR that supersedes — never
+   silently overridden.
+5. **Specs break into vertical-slice tickets** (ADR 0002). Each ticket is a
+   GitHub sub-issue of the design issue `#n` (fallback: `Part of #n` at the
+   top of the child body + a task list in the parent). Each ticket is a
+   tracer bullet: a narrow but complete path through every layer, demoable
+   on its own, sized for one fresh context window (wide refactors go
+   expand–contract instead — see `/to-tickets`). Each ticket body carries:
+   what it delivers, its blocking edges (native `blocked_by` dependencies
+   where available; mechanics in
+   [`docs/agents/issue-tracker.md`](agents/issue-tracker.md)), runnable
+   acceptance criteria, and references to the spec path and governing ADRs.
+   Triage labels apply per ticket; the parent design issue closes only when
+   every child is closed. The linked-issue graph IS the design.
+6. **The approval gate.** Ordinary design is approved conversationally: the
+   spec is posted in the issue thread and the maintainer's in-thread
+   approval is the record. High-risk design (security, data loss,
+   irreversible migrations, public contracts) requires an explicit human
+   sign-off comment in the issue plus an ADR for the decision. A ticket
+   earns `ready-for-agent` when its blockers are resolved, its acceptance
+   criteria are defined, and its spec has passed the applicable gate — no
+   label, no work.
+7. **What Build reads, in order** (forward contract to the next stage): (1)
+   `gh issue view <n> --comments`, (2) `intent/<n>-<slug>/spec.md` (then
+   `intent.md` for the why), (3) every ADR touching the area, (4) root
+   `CONTEXT.md`, (5) only then the code. A ticket whose spec or links are
+   missing is bounced back to Design, not improvised around.
+8. **Greenfield vs brownfield — one workflow, different seeds.** Same
+   pipeline, same artifacts, same gates. Greenfield seeds the spec from the
+   brief or PRD against SYSTEM-INTENT.md, and its design concerns are mostly
+   new seams; brownfield seeds it from the diagnosis, retro finding, or
+   transcript, and its design must first read the existing code and ADRs it
+   touches, preferring existing seams over new ones. The read order above is
+   identical — in brownfield, step (5) simply has more to say.
+
 ## Stage-by-stage map
 
 | Stage | Skill | When / where |
 |---|---|---|
 | Capture the intent | issue + `intent/<n>-<slug>/intent.md` | First, right after the issue exists (see **Plan — issue-first intake** above). |
 | Elicit requirements | `/to-questionnaire` | New feature with unknowns. Converts vague asks into answerable questions. |
-| Write the spec | `/to-spec` | After questionnaire. Spec is the durable artifact; reference it from issues. |
+| Write the spec | `/to-spec` | After questionnaire. Spec lives at `intent/<n>-<slug>/spec.md`, referenced from the issue by path (see **Design** above). |
 | Break into tickets | `/to-tickets` | After spec. Tracer-bullet vertical slices; blocking edges declared per ticket (GitHub native blocking links). Never horizontal layers. |
 | Groom the queue | `/triage` | Continuous. State machine of triage roles → issues end as agent-ready briefs labeled `ready-for-agent`. AI-generated comments carry the AI-triage disclaimer. |
 | Stress-test thinking | `/grilling` (or `/grill-me`, `/grill-with-docs`) | Before accepting a spec, an architecture, or an agent's plan. Cheap insurance; use liberally at decision points. |
