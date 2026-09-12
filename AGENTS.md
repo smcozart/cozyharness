@@ -16,7 +16,9 @@ Single-context: `CONTEXT.md` at repo root (created lazily), ADRs in `docs/adr/`.
 
 ### Spec & ticket overrides
 
-`/to-spec` writes the spec to `intent/<n>-<slug>/spec.md` in the repo, never the issue body — link by path only (ADR 0001). `/to-spec` and `/to-tickets` never auto-apply labels: the Design approval gate comes first, then triage labels move.
+Canonical rule lives in `docs/engineering-workflow.md` (stage table); this section is a pointer to it so the two can't silently diverge.
+
+Overrides to the vendored skill: `/to-spec` writes the spec to `intent/<n>-<slug>/spec.md`, NOT into the issue body — the issue body stays a brief (ADR 0001) — and does NOT apply `ready-for-agent` at spec time; the approval gate comes first.
 
 ## Engineering workflow
 
