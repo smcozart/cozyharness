@@ -20,7 +20,7 @@ setup (once per repo)
 records:
 
 - **Issue tracker**: GitHub Issues by default (remote, shared, API-addressable — fits
-  multi-session/multi-agent work; see ADR 0004). Local markdown only for non-GitHub repos.
+  fits multi-session/multi-agent work; see `docs/agents/issue-tracker.md`). Local markdown only for non-GitHub repos.
 - **Triage labels**: the five canonical triage-role labels, plus `ready-for-agent`
   ("blockers resolved, acceptance criteria defined").
 - **Domain docs**: `CONTEXT.md` at repo root, ADRs in `docs/adr/NNNN-slug.md`.

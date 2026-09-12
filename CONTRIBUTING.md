@@ -19,7 +19,8 @@ system.
    `needs-info`, …) until they earn `ready-for-agent` = blockers resolved +
    acceptance criteria defined. See `docs/agents/`.
 3. **Tickets with edges.** Multi-part changes become vertical-slice ticket
-   issues with blocking edges declared in issue bodies.
+   issues with blocking edges via native `blocked_by` dependencies where available, else a
+   `Blocked by: #n` line.
 4. **Build** test-first and lean: stdlib first, shortest working diff, no
    speculative abstractions (the vendored `ponytail` skill enforces this
    posture — work with it).
