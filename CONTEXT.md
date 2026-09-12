@@ -30,6 +30,8 @@ _Avoid_: vision doc, charter
 **tracker**:
 GitHub Issues — the system of record for all work. The issue number is the
 **join key** tying together intent, spec, branch, PR, run, and pasted proof.
+For ticketed work: branch, PR, and proof join on the ticket (child) issue
+number; intent and spec join on the parent design issue number.
 _Avoid_: backlog, TODO list, board
 
 **spec.md**:

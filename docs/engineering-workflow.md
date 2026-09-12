@@ -116,8 +116,10 @@ that moves work toward `ready-for-agent`.
    criteria are defined, and its spec has passed the applicable gate — no
    label, no work.
 7. **What Build reads, in order** (forward contract to the next stage): (1)
-   `gh issue view <n> --comments`, (2) `intent/<n>-<slug>/spec.md` (then
-   `intent.md` for the why), (3) every ADR touching the area, (4) root
+   `gh issue view <n> --comments` (the ticket, a child issue per ADR 0002),
+   (2) follow the ticket body's spec-path reference (or its parent's
+   `intent/<parent-n>-<slug>/`) to the spec; then the `intent.md` for the
+   why, (3) every ADR touching the area, (4) root
    `CONTEXT.md`, (5) only then the code. A ticket whose spec or links are
    missing is bounced back to Design, not improvised around.
 8. **Greenfield vs brownfield — one workflow, different seeds.** Same
