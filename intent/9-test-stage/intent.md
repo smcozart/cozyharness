@@ -22,7 +22,8 @@ regression failure. Every ticket close pastes that run's output next to its
 acceptance-criteria output. Every check in the suite has a recorded fail-first
 witness (a historic commit or a documented mutation on which it fails for the
 expected reason), so no tautological green joins the suite. The invocation
-contract lives in AGENTS.md as a Commands block with the exact healthy output.
+contract lives in AGENTS.md as a Commands block whose check list is itself
+verified by the suite.
 
 ## Scope
 
@@ -56,17 +57,23 @@ contract lives in AGENTS.md as a Commands block with the exact healthy output.
 - `tests/validate.sh` exists, runs from a clean checkout with only bash,
   git, grep/awk, and python3 (stdlib), exits 0 on `main` and prints one
   `ok:`/`FAIL:` line per check.
-- Every check has a witness: `tests/validate.sh --witness` reproduces each
-  historic-commit witness (check run against `git show <sha>:<path>` returns
-  non-zero) and exits 0 only if every witness fails as expected.
-- The dangling `ADR 0007` reference in `docs/engineering-workflow.md` is
-  either resolved or the reference check demonstrably fails on it before the
-  fix and passes after (a fail-first witness in the same ticket).
+- Every check has a witness, historic sha or one-line mutation, and
+  `tests/validate.sh --witness` runs all of them: bad sha / mutated tree →
+  FAIL, good sha → ok; it exits 0 only if every row behaves as expected.
+  The verbatim patterns and shas are in the spec, not deferred to tickets;
+  the sha-backed ones were verified by hand before the spec was committed.
+- The dangling ADR reference at `docs/engineering-workflow.md:204` is
+  resolved (rewrite, or write the next contiguous ADR and repoint), with `adr-refs` shown
+  failing on `1b41a31` and passing after.
+- `sync-rule` is symmetric (canonical doc **or** plugin SKILL.md touched ⇒
+  all three touched) and range-aware (`<range>` arg, dirty tree, or last
+  commit); `a6519a9` → FAIL, `571afe4` → ok.
 - `docs/engineering-workflow.md` has a `## Test` section; the same commit
   touches `plugin/skills/engineering-workflow/SKILL.md` and `README.md`
   (the sync check in the suite passes on that commit).
-- AGENTS.md carries a Commands block with `tests/validate.sh` and its exact
-  healthy output; the next closed ticket's proof comment includes that run.
+- AGENTS.md carries a Commands block naming `tests/validate.sh`, its
+  `--witness` mode, and the check list (verified by `agents-commands`); the
+  next closed ticket's proof comment includes that run.
 - Each child ticket closes with pasted acceptance-criteria output AND a
   pasted `tests/validate.sh` run.
 

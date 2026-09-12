@@ -24,22 +24,23 @@ this spec selects from it deliberately (see "Suite selection").
 2. As an orchestrator doing QC, I want the same command with the same output
    shape (`ok: <check>` / `FAIL: <check> — <why>`, one line each, summary
    last), so that pasted output in an issue is comparable to my own run.
-3. As a fresh agent in any host, I want a Commands block in AGENTS.md with
-   the exact healthy output, so that I know what to run and what "green"
-   looks like without chat history.
-4. As a maintainer, I want the sync rule checked mechanically on a commit
-   (touch `docs/engineering-workflow.md` ⇒ touch the plugin SKILL.md and
-   README.md in the same commit), so that drift is caught at close, not at
-   retro.
+3. As a fresh agent in any host, I want a Commands block in AGENTS.md that
+   names the command and the check list it must print (itself verified by
+   the `agents-commands` check, so it cannot go stale), so that I know what
+   to run and what "green" looks like without chat history.
+4. As a maintainer, I want the sync rule checked mechanically over a change
+   set (a range, the dirty tree, or the last commit — touching the canonical
+   doc **or** the plugin SKILL.md ⇒ all three synced files touched), so that
+   drift is caught at close, not at retro, and a split PR cannot slip past.
 5. As a maintainer, I want structural rules checked (intent dirs, spec
    headers, ADR numbering, ADR references resolving), so that the join-key
    chain (issue ↔ intent ↔ spec ↔ ADR) can't silently break.
-6. As a reviewer, I want every adversary finding from Build that was fixed by
-   changing text (#8 corpus) encoded as a claim check, so that a rewrite can't
-   reintroduce it unnoticed.
+6. As a reviewer, I want every #8 corpus finding **with a textual footprint**
+   encoded as a verbatim claim check (the five listed below; the rest named
+   as eval material), so that a rewrite can't reintroduce it unnoticed.
 7. As a reviewer, I want every check to carry a fail-first witness — a
-   historic commit sha, or a documented mutation — and a runnable
-   `--witness` mode for the sha-backed ones, so that no tautological green
+   historic commit sha, or a one-line mutation — and a runnable
+   `--witness` mode for **all** of them, so that no tautological green
    joins the suite.
 8. As a bug-fixer, I want the gate to require the failing case first (red on
    the bad version, for the expected reason, then green), so that fixes are
@@ -71,49 +72,63 @@ A close missing either is reopened, same as a failed acceptance criterion.
 
 `tests/validate.sh` is a single bash script; each check is a shell function
 that prints one `ok:`/`FAIL:` line and flips a `fail` flag; the script exits
-`$fail`. No framework, no per-check files. Two halves:
+`$fail`. No framework, no per-check files. `tests/validate.sh --list` prints
+the check names, one per line (consumed by `agents-commands`). Two halves.
+
+Every pattern below is the check, verbatim — not a placeholder for a ticket
+to pin. All sha-backed witnesses were run against `git show <sha>:<path>`
+before this spec was committed; the transcript is on #9.
 
 **Static half (repo rules)**
 
-| Check | Rule | Witness |
+| Check | Rule (verbatim) | Witness |
 |---|---|---|
-| `sync-rule` | If the commit under test touches `docs/engineering-workflow.md`, it also touches `plugin/skills/engineering-workflow/SKILL.md` and `README.md`. Default commit under test = `HEAD`; a sha argument overrides. | Historic: `a6519a9` (touched 1 of 3) must fail; `571afe4` (3 of 3) must pass. |
-| `stage-parity` | Each of `## Plan`, `## Design`, `## Build`, `## Test` exists as an H2 in both the canonical doc and the plugin SKILL.md; README's phase map names all four. | Historic: `HEAD` today fails (`## Test` missing from the canonical doc) — the fix lands in the doc ticket, giving a real before/after. |
-| `intent-layout` | Every `intent/<n>-<slug>/` matches `^[0-9]+-[a-z0-9-]+$`, contains `intent.md` whose `**Issue:** #<n>` matches the dir number; a `spec.md`, if present, has `**Issue:** #<n>` and `**Intent:** \`intent/<n>-<slug>/intent.md\`` matching its own path. | Mutation: rename a dir or edit the header in a scratch worktree. |
-| `adr-numbering` | `docs/adr/` files match `^[0-9]{4}-[a-z0-9-]+\.md$`, numbers start at 0001 and are contiguous; each has an `**Issue:**` header. | Mutation: add `docs/adr/0009-x.md` in a scratch worktree. |
-| `adr-refs` | Every `ADR NNNN` / `ADR-NNNN` mention in AGENTS.md, CONTRIBUTING.md, README.md, CONTEXT.md, `docs/engineering-workflow.md`, `docs/adr/`, `intent/`, `plugin/` resolves to `docs/adr/NNNN-*.md`. Vendored skills and `docs/agents/*.md` (example prose) excluded. | Historic: `HEAD` today fails on `docs/engineering-workflow.md` "ADR 0007". Resolve the dangle in the same ticket (write the ADR it alludes to, or drop the parenthetical) so the suite is green at merge. |
-| `hooks-json` | `plugin/hooks/hooks.json` parses; top-level key is exactly `hooks`; event keys ⊆ Claude Code's hook events. `python3 -m json.tool` + a five-line key check. | Mutation: trailing comma. |
-| `skill-frontmatter` | Tracked skills only (`plugin/skills/*`, `.agents/skills/ponytail`, `.agents/skills/factory-orchestrator`): file starts with `---`, has `name:` and `description:` before the closing `---`, `name` equals the directory name. grep/awk, no YAML lib. | Mutation: delete `name:` line. |
-| `skill-copies` | `plugin/skills/factory-orchestrator/SKILL.md` and `.agents/skills/factory-orchestrator/SKILL.md` are byte-identical (the #5 contract). | Mutation: one-char edit to one copy. |
+| `sync-rule` | Over the *change set under test*, if **either** `docs/engineering-workflow.md` **or** `plugin/skills/engineering-workflow/SKILL.md` is touched, all three of {doc, SKILL.md, `README.md`} are touched. README-only edits pass (it carries non-process content: path table, quick start). Change set = `<range>` argument if given (e.g. `origin/main..HEAD` for a multi-commit PR); else the working tree + index vs `HEAD` if dirty; else `HEAD~1..HEAD`. The Test gate requires the close-time run to pass the ticket's range explicitly. | Historic: `a6519a9` (touched 1 of 3 → FAIL), `571afe4` (3 of 3 → ok). Verified. |
+| `stage-parity` | `grep -cE '^## (Plan\|Design\|Build\|Test)\b'` = 4 in both the canonical doc and the plugin SKILL.md; `grep -cE '^(Plan\|Design\|Build\|Test) ─+►' README.md` = 4. | Historic: `1b41a31` → FAIL (doc has 3/4, `## Test` missing; SKILL 4/4; README 4/4). Verified. Fix lands in the doc ticket. |
+| `intent-layout` | Every *directory* under `intent/` (the two `TEMPLATE*.md` files are exempt by being files) matches `^[0-9]+-[a-z0-9-]+$`, contains `intent.md` whose `**Issue:** #<n>` equals the dir number; `spec.md`, if present, has `**Issue:** #<n>` and `` **Intent:** `intent/<n>-<slug>/intent.md` `` equal to its own path. | Mutation (automated, see `--witness`): `sed -i 's/#9/#8/' intent/9-test-stage/intent.md` → FAIL. |
+| `adr-numbering` | `docs/adr/*.md` names match `^[0-9]{4}-[a-z0-9-]+\.md$`, sequence is exactly 0001..N contiguous; each file has a `**Issue:**` header. | Mutation: `touch docs/adr/0009-x.md` → FAIL (gap). |
+| `adr-refs` | Every match of `ADR[ -][0-9]{4}` in AGENTS.md, CONTRIBUTING.md, README.md, CONTEXT.md, `docs/engineering-workflow.md`, `docs/adr/**`, `intent/**`, `plugin/**` resolves to an existing `docs/adr/<NNNN>-*.md`. Vendored skills and `docs/agents/*.md` (example prose) excluded. Because `adr-numbering` forces contiguity, the only way to satisfy a dangling reference is to rewrite it or to write the next-numbered ADR and repoint the text. | Historic: `1b41a31` → FAIL (`docs/engineering-workflow.md:204` references a number no file has). Verified. This spec has been scrubbed so it does not trip its own check. |
+| `hooks-json` | `python3 -c 'import json,sys; d=json.load(open("plugin/hooks/hooks.json")); assert list(d)==["hooks"]; [ (h["type"],h["command"]) for ev in d["hooks"].values() for m in ev for h in m["hooks"] ]'` — parses, sole top-level key `hooks`, every entry has `type` + `command`. No external event-name list (would rot). | Mutation: append `,` before the final `}` → FAIL (parse). |
+| `skill-frontmatter` | For each tracked skill dir (`plugin/skills/*`, `.agents/skills/ponytail`, `.agents/skills/factory-orchestrator`): line 1 is `---`; a second `---` exists; between them `^name: <dirname>$` and `^description: .+` both match. awk, no YAML lib. | Mutation: `sed -i '/^name:/d' plugin/skills/factory-orchestrator/SKILL.md` → FAIL. |
+| `skill-copies` | `cmp plugin/skills/factory-orchestrator/SKILL.md .agents/skills/factory-orchestrator/SKILL.md`. Kept because #5's contract ("both copies, byte-identical, one commit") has no other guard and the check is one line. | Mutation: `echo x >> .agents/skills/factory-orchestrator/SKILL.md` → FAIL. |
+| `agents-commands` | The `## Commands` block in AGENTS.md contains every name printed by `tests/validate.sh --list`, and no name that `--list` does not print (so the block can't go stale). | Mutation: delete one name from the block → FAIL. |
 
 **Regression half (claim checks from #8)**
 
-One grep-shaped assertion per corpus item whose fix was textual; each carries
-the corpus line and its bad sha in a comment. Seeded set (the ticket pins the
-exact patterns):
+One grep assertion per corpus item **that has a textual footprint**; each
+carries the corpus line and its bad/good shas in a comment. Items with no
+textual footprint (HANDOFF grep fallback reachability, "Poll reads the log"
+overclaim, Codex hedge contradiction, vague "triage labels move") stay in #8
+as eval material — encoding them as greps would be the tautological green the
+amendment forbids. Paths: `FO` = `plugin/skills/factory-orchestrator/SKILL.md`.
 
-| Corpus item | Claim | Bad sha (must fail) | Good sha (must pass) |
+| Check | Claim (verbatim) | Bad sha → FAIL | Good sha → ok |
 |---|---|---|---|
-| T1 MED trust wording | factory-orchestrator SKILL.md does not say `-p` "REFUSES" the trust dialog and does not say it "skips" it interactively-wrong (exact pattern pinned by ticket) | `da9eb33` | `4e9b547` |
-| T1 LOW `>log` clobber | no bare `>log` redirect without a per-ticket filename | `da9eb33` | `4e9b547` |
-| T1 MED session-id | spawn line captures a session id / stream-json output | `da9eb33` | `4e9b547` |
-| T3 MED label drift | AGENTS.md override sentence names `/to-spec` + `ready-for-agent`, not "never auto-apply labels" | `43b63dc` | `92e6a25` |
-| T3 MED precedence framing | AGENTS.md contains the literal "Overrides to the vendored skill:" | `43b63dc` | `92e6a25` |
+| `t1-trust-wording` | `FO`: `grep -q 'trust dialog is SKIPPED' && ! grep -qw REFUSES` | `7e8a195` (says "skips", no SKIPPED), `da9eb33` (says REFUSES) | `4e9b547` |
+| `t1-log-clobber` | `FO`: `! grep -qE '>log[[:space:]]'` — bare `>log ` redirect; `>log-<ticket>.log` does not match (the `[[:space:]]` is the word boundary). | `da9eb33` | `4e9b547`, `HEAD` |
+| `t1-spawn-session` | `FO`: `grep -qE '^- Spawn:.*--output-format'` — the Spawn line itself captures a session id (stream-json elsewhere in the file does not count; that is why `da9eb33` is still bad). | `7e8a195`, `da9eb33` | `4e9b547` |
+| `t3-label-drift` | `AGENTS.md`: `` grep -qF 'does NOT apply `ready-for-agent` at spec time' && ! grep -qF 'never auto-apply labels' `` | `43b63dc` | `92e6a25` |
+| `t3-precedence` | `AGENTS.md`: `grep -qF 'Overrides to the vendored skill:'` | `43b63dc` | `92e6a25` |
 
-Items with no textual footprint (e.g. "HANDOFF grep fallback reachable on
-every spawn path") stay in #8 as eval material, not as grep checks —
-listing them as checks would be the tautological-green failure the amendment
-forbids.
+All 13 sha runs above produced the expected verdict (transcript on #9).
 
 ### `--witness` mode
 
-`tests/validate.sh --witness` iterates a table of `(check, sha, expect)`
-triples, runs the check against `git show <sha>:<path>` (or a `git worktree`
-at `<sha>` for multi-file checks), and reports `witness ok:` when the result
-matches `expect`. Exit non-zero if any witness does not behave. Mutation
-witnesses are documented in the check's comment, not automated — the amendment
-requires the evidence, not the automation; ticket proof pastes one mutation
-run per mutation-witnessed check.
+`tests/validate.sh --witness` runs every witness in the two tables and
+reports `witness ok: <check> @<sha|mutation> expected <FAIL|ok>` per row;
+exits non-zero if any row does **not** behave as expected (a bad sha that
+passes, or a good sha that fails). Two mechanisms, same check functions:
+
+- **sha witnesses**: single-file checks read `git show <sha>:<path>`;
+  multi-file checks (`sync-rule`, `stage-parity`, `adr-refs`) use
+  `git worktree add "$(mktemp -d)" <sha>`, removed on exit via `trap`.
+- **mutation witnesses**: copy the tree to `mktemp -d`, apply the one-line
+  mutation from the table, run the check there, expect FAIL. Automated, not
+  one-time evidence — a check whose mutation stops failing is a broken
+  check, and `--witness` is how that is noticed.
+
+Requires full history (`git fetch --unshallow` on a shallow clone; the script
+says so and exits non-zero rather than reporting a false witness).
 
 ### Fail-first semantics (amendment item 3)
 
@@ -137,9 +152,11 @@ not loosen the check in the same diff. No ownership split is claimed.
   protected checks` (gate, command, witness rule, protection rule, eval
   boundary), synced to the plugin SKILL.md's existing Test paragraph and the
   README's `Test ────►` line, same commit.
-- AGENTS.md gains a `## Commands` block: `tests/validate.sh` with the exact
-  healthy output pasted (the check list as `ok:` lines + summary + exit 0),
-  and `tests/validate.sh --witness`.
+- AGENTS.md gains a `## Commands` block: `tests/validate.sh [<range>]`,
+  `tests/validate.sh --witness`, and the healthy shape — `ok: <name>` for
+  each name in `--list`, then `N ok, 0 failed`, exit 0. The check names in
+  the block are verified by `agents-commands`; no verbatim transcript is
+  pasted there (it would be a second staleness surface).
 - CONTEXT.md: **Test gate** entry sharpened (currently "pasted verification
   output") to name the command; new terms **check**, **witness** if the
   domain-modeling pass finds them load-bearing.
@@ -165,7 +182,7 @@ sentence.
 | Proposal | Decision | Why |
 |---|---|---|
 | sync-rule parity | **in** (as same-commit check + stage-heading parity) | Literal text parity is impossible — the three files are different renderings. The commit rule is what CONTRIBUTING actually states, and history holds real bad commits. |
-| structure checks | **in** | Cheap, join-key protecting, real failure in tree today (ADR 0007). |
+| structure checks | **in** | Cheap, join-key protecting, real failure in tree today (the dangling ADR reference at workflow doc line 204). |
 | hooks.json validity | **in** | One line; the plugin's only executable surface. |
 | SKILL frontmatter | **in** (grep, tracked skills only) | Product is skills; a broken header is a silent no-load. |
 | bootstrap smoke | **out of default run** | Network clone + installs Claude plugins on the host. Stays the manual regression procedure in #6; may become `tests/bootstrap-smoke.sh` opt-in later if someone needs it twice. |
@@ -203,7 +220,8 @@ sentence.
 
 - The suite is the test. Its own correctness is proven by `--witness`: each
   sha-backed check shown red on its bad sha and green on its good sha, output
-  pasted in the ticket. Mutation-witnessed checks paste one mutation run each.
+  pasted in the ticket; each mutation-witnessed check shown red under its
+  automated mutation. The `--witness` transcript is part of the ticket proof.
 - Good check = external behaviour of an artifact (a file says X / a commit
   touches Y), never the script's internals.
 - Prior art: `bootstrap.sh` (function-per-step, `fail=1`, `!!` lines, exit
@@ -223,9 +241,11 @@ sentence.
 
 ## Open questions
 
-1. Resolve `ADR 0007` by writing the ADR it alludes to ("no load-bearing
-   sessions") or by dropping the parenthetical? — owner: operator; not
-   blocking (either satisfies `adr-refs`; ticket author picks and says so).
+1. The dangling reference at `docs/engineering-workflow.md:204` ("no
+   load-bearing sessions"): rewrite the parenthetical, or write it as the
+   next contiguous ADR (0003) and repoint? — owner: operator; not blocking
+   (either satisfies `adr-refs` + `adr-numbering`; ticket author picks and
+   says so). The number it currently names cannot be made to resolve.
 2. Does the "validate.sh checks artifacts; evals are not tests" boundary earn
    an ADR? — owner: operator at ticket cut; not blocking.
 3. Reviewer/adversary agent prompts (`.pi/agents/*.md`) get the protection
