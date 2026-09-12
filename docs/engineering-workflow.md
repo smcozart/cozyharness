@@ -185,8 +185,11 @@ two consecutive QC failures halt the chain. Those rules live in the
 
 ## Orchestration layer (multi-agent builds)
 
-**`factory-orchestrator` skill + `herdr`** — when tickets are parallelizable and you want
-workers, not a single session. Key rules (full detail in the skill):
+**`factory-orchestrator` skill + a host worker mechanism** — when tickets are
+parallelizable and you want workers, not a single session. The skill's rules
+are host-neutral; the mechanics below use herdr under pi as the reference
+host (swap in your host's equivalent — headless Claude Code workers, Codex
+sessions — keeping the same contract). Key rules (full detail in the skill):
 
 1. Orchestrator never writes code; it dispatches, watches, and runs QC itself.
 2. One ticket per worker session, fresh pane per ticket (`herdr tab create` →
