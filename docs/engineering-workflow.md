@@ -163,6 +163,39 @@ QC + adversarial review before blessing, workers end with a `HANDOFF:` ping,
 two consecutive QC failures halt the chain. Those rules live in the
 `factory-orchestrator` skill; the hosts change, the contract doesn't.
 
+## Test — one command, fail-first, protected checks
+
+Formalized in issue [#9](https://github.com/smcozart/cozyharness/issues/9).
+Build §5 stays; Test adds the repo's own standing rules to every close. The
+command is the contract, not any harness hook.
+
+1. **One command is the gate.** `tests/validate.sh [<range>]` prints one
+   `ok: <check>` / `FAIL: <check> — <why>` line per check, then
+   `N ok, M failed`; non-zero exit means "not healthy." Closing a ticket
+   pastes that run (full output + exit code) next to the acceptance-criteria
+   output, passing the ticket's range explicitly (e.g. `origin/main..HEAD`).
+   A close missing it is reopened, same as a failed acceptance criterion.
+2. **Fail-first.** A bug/defect fix pastes the pair: the check red on the bad
+   version for the expected reason, then green on the fix. A new static check
+   is admitted only with a witness — a historic sha it fails on, or a one-line
+   mutation that makes it fail — pasted once when the check lands.
+3. **Witnesses are runnable.** `tests/validate.sh --witness` replays every
+   witness through the same check functions (bad sha / mutated tree → FAIL,
+   good sha → ok). A check whose witness stops failing is a broken check.
+   Needs full history (`git fetch --unshallow` on a shallow clone).
+4. **Protection rule.** A diff that touches `tests/` and removes, narrows, or
+   reorders a check away from the path it guards is rejected in review unless
+   it cites the issue that retires the rule. Whoever fixes a checking surface
+   does not loosen the check that measures it in the same diff.
+5. **Tests are not evals.** `tests/validate.sh` checks artifacts (a file says
+   X, a commit touches Y) — deterministic, offline, bash + git + python3
+   stdlib. Findings with no textual footprint stay in the eval ledger (#8);
+   the eval harness waits on #1, as does CI wiring — the exit code is
+   CI-ready.
+
+The check list lives in the `## Commands` block of `AGENTS.md` and is itself
+verified by the `agents-commands` check, so it cannot go stale.
+
 ## Stage-by-stage map
 
 | Stage | Skill | When / where |
@@ -201,7 +234,7 @@ sessions — keeping the same contract). Key rules (full detail in the skill):
 6. Two consecutive QC failures anywhere → halt the chain, revisit the prompt/design
    with the operator.
 7. No load-bearing sessions: any pane can die and work resumes from GitHub + pushed
-   commits (ADR 0007).
+   commits — the tracker and the remote are the only state.
 
 The full skill text lives at `.agents/skills/factory-orchestrator/SKILL.md` in this repo
 (it's self-contained except for `.factory/design.md`, which is build-specific — replace

@@ -62,9 +62,23 @@ The phase where agents execute one ticket per session against the tracker,
 test-first, citing ADRs.
 _Avoid_: implementation (too loose — Build includes its proof obligations)
 
+**check**:
+One shell function in `tests/validate.sh` that prints exactly one
+`ok: <name>` or `FAIL: <name> — <why>` line. Asserts external behaviour of an
+artifact (a file says X, a commit touches Y), never the script's internals.
+Admitted only with a witness.
+_Avoid_: test case, assertion, lint
+
+**witness**:
+The recorded fail-first proof for a check: a historic commit sha it fails on,
+or a one-line mutation that makes it fail. `tests/validate.sh --witness`
+replays them all; a witness that stops failing means the check is broken.
+_Avoid_: fixture, snapshot, example
+
 **gate**:
 A recorded human decision that lets work cross a phase boundary. The Design
-gate is approval of the spec; the Test gate is pasted verification output.
+gate is approval of the spec; the Test gate is the pasted `tests/validate.sh`
+run (exit 0, ticket range) beside the pasted acceptance-criteria output.
 Triage is not a gate — it is a label state machine that ends at
 `ready-for-agent`.
 _Avoid_: sign-off (only the high-risk variant), approval (the act, not the

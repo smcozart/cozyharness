@@ -4,7 +4,7 @@
 
 - T1 (script): `tests/validate.sh` (new), `tests/README.md` not needed.
 - T2 (docs): `docs/engineering-workflow.md`, `plugin/skills/engineering-workflow/SKILL.md`, `README.md`, `AGENTS.md`, `CONTEXT.md`,
-  `.pi/agents/reviewer.md`, `.pi/agents/adversary.md`, ADR-0007 dangle resolved at `docs/engineering-workflow.md:204`.
+  `.pi/agents/reviewer.md`, `.pi/agents/adversary.md`, the dangling ADR reference ("no load-bearing sessions" parenthetical in `docs/engineering-workflow.md`) rewritten in place.
 
 ## Order of work
 

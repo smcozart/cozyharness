@@ -96,12 +96,22 @@ skill: orchestrator never writes code, QC + adversarial review before
 blessing, HANDOFF ping, two-failure halt). Workers end with a HANDOFF ping
 to the orchestrator when orchestrated: what landed, ADRs written, followups.
 
-## Test — proof over claim
+## Test — one command, fail-first, protected checks
 
-Run the test suite. Closing work requires pasting the verification commands
-and their output into the issue — never an assertion. Failures reopen the
-issue with the failing command. The orchestrator QCs against the intent: did
-we veer off course? Plus an adversarial pass (assume the diff is wrong).
+One command is the gate: `tests/validate.sh [<range>]` prints one
+`ok:`/`FAIL:` line per check, then `N ok, M failed`; non-zero exit means
+"not healthy." Closing a ticket pastes that run (with the ticket's range)
+next to its acceptance-criteria output — never an assertion; a close missing
+either is reopened. Fail-first: a bug fix pastes the check red on the bad
+version, then green; a new check is admitted only with a witness (historic
+sha or one-line mutation), and `tests/validate.sh --witness` replays them
+all. Protection rule: a diff touching `tests/` that removes, narrows, or
+reorders a check away from what it guards is rejected unless it cites the
+issue retiring the rule; the fixer of a checking surface never loosens the
+check in the same diff. Tests check artifacts (deterministic, offline);
+behavioural findings are evals and stay in the eval ledger. The check list
+lives in the `## Commands` block of `AGENTS.md`, verified by the suite itself.
+The orchestrator still QCs against the intent plus an adversarial pass.
 
 ## Deploy — gated
 

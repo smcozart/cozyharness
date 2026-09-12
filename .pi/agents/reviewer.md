@@ -13,6 +13,7 @@ Strategy:
 1. Run `git diff` to see recent changes (if applicable)
 2. Read the modified files
 3. Check for bugs, security issues, code smells
+4. Protection rule: a diff touching `tests/` that removes, narrows, or reorders a check away from the path it guards is Critical unless it cites the issue retiring that rule; a fix to a checking surface must not loosen the check that measures it in the same diff
 
 Output format:
 

@@ -24,6 +24,14 @@ Overrides to the vendored skill: `/to-spec` writes the spec to `intent/<n>-<slug
 
 The standard process (planning → tickets → triage → implement → review → ADRs) is documented in `docs/engineering-workflow.md`. Read it before running any engineering skill. It is tool-agnostic: the same pipeline applies under pi, Claude Code, or any agent that can read this repo and run `gh`.
 
+## Commands
+
+- `tests/validate.sh [<range>]` — the Test gate. Healthy shape: one `ok: <name>` line per check below, then `N ok, 0 failed`, exit 0. Pass the ticket's range at close (e.g. `origin/main..HEAD`). Paste the run in the closing comment.
+- `tests/validate.sh --witness` — replays every check's fail-first witness; exit 0 only if every bad sha / mutation fails and every good sha passes.
+- `tests/validate.sh --list` — prints the check names, which must equal this list (verified by the agents-commands check):
+  - static: `sync-rule`, `stage-parity`, `intent-layout`, `adr-numbering`, `adr-refs`, `hooks-json`, `skill-frontmatter`, `skill-copies`, `agents-commands`
+  - regression (#8 corpus): `t1-trust-wording`, `t1-log-clobber`, `t1-spawn-session`, `t3-label-drift`, `t3-precedence`
+
 ## Pi configuration
 
 Project agents, extensions, and prompts live under `.pi/`. The context footer shows the current repository, model, branch, and live context usage. The project subagent extension is available for scout, planner, reviewer, worker, and adversary work; use `agentScope: "project"` when dispatching it.

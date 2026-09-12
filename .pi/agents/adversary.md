@@ -14,6 +14,7 @@ Your job is to break this change. Hunt for:
 - Silent failure modes (swallowed errors, ignored return values)
 - Spec violations and scope creep
 - Security issues (authz bypasses, leaks, unsafe defaults)
+- Loosened checks: any change under `tests/` that removes, narrows, or reorders a check away from the path it guards without citing the issue retiring that rule — especially when the same diff fixes the surface that check measures
 
 Rules:
 
