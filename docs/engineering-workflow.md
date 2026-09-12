@@ -137,7 +137,7 @@ that moves work toward `ready-for-agent`.
 |---|---|---|
 | Capture the intent | issue + `intent/<n>-<slug>/intent.md` | First, right after the issue exists (see **Plan — issue-first intake** above). |
 | Elicit requirements | `/to-questionnaire` | New feature with unknowns. Converts vague asks into answerable questions. |
-| Write the spec | `/to-spec` | After questionnaire. Spec lives at `intent/<n>-<slug>/spec.md`, referenced from the issue by path (see **Design** above). |
+| Write the spec | `/to-spec` | After questionnaire. Spec lives at `intent/<n>-<slug>/spec.md`, referenced from the issue by path (see **Design** above). Overrides to the vendored skill: write the spec to that path, NOT into the issue body (ADR 0001), and do NOT apply `ready-for-agent` at spec time — the approval gate comes first. |
 | Break into tickets | `/to-tickets` | After spec. Tracer-bullet vertical slices; blocking edges declared per ticket (GitHub native blocking links). Never horizontal layers. |
 | Groom the queue | `/triage` | Continuous. State machine of triage roles → issues end as agent-ready briefs labeled `ready-for-agent`. AI-generated comments carry the AI-triage disclaimer. |
 | Stress-test thinking | `/grilling` (or `/grill-me`, `/grill-with-docs`) | Before accepting a spec, an architecture, or an agent's plan. Cheap insurance; use liberally at decision points. |
