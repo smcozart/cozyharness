@@ -27,7 +27,8 @@ Design ──► spec.md beside the intent; ADRs over the bar; vertical-slice
           tickets as child issues with blocking edges; approval gate
 Build ───► one ticket per agent session; workers cite ADRs, write ADRs
 Test ────► tests/validate.sh exits 0 (fail-first; checks and the content
-          they guard protected) — full run + acceptance output pasted at close
+          they guard protected) — run + acceptance output (+ pair for fixes)
+          pasted at close
 Deploy ──► branch protection is the gate
 Maintain ─► intake: retros/PRDs/transcripts feed the next cycle through Plan
 ```
