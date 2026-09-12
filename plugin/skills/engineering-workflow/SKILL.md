@@ -67,8 +67,10 @@ written after Design, as Build preparation.
    design: contradictions are surfaced or superseded, never silently
    overridden.
 3. **Tickets**: break the spec into vertical-slice sub-issues of the design
-   issue (ADR 0002), each with blocking edges declared in the body, runnable
-   acceptance criteria, and spec/ADR references. Triage labels move issues
+   issue (ADR 0002), each with explicit blocking edges via native `blocked_by`
+   dependencies where available, else a `Blocked by: #n` body line
+   (mechanics: `docs/agents/issue-tracker.md`), runnable acceptance criteria,
+   and spec/ADR references. Triage labels move issues
    through their state machine; issues end as **`ready-for-agent`** (blockers
    resolved + acceptance criteria defined + spec approved). The label is a
    contract: no label, no work. The linked-issue graph IS the design.
@@ -116,7 +118,7 @@ more reliable each revolution.
 - **Governing**: review, scope approval, proof requirements at every seam.
 
 Non-negotiables: GitHub Issues is the tracker (no side TODO files). Blocking
-edges live in issue bodies. `ready-for-agent` is a contract. ADRs are pushed
+edges are explicit (native dependencies or declared fallback). `ready-for-agent` is a contract. ADRs are pushed
 immediately. Closing work requires pasted proof. Artifacts over conversation.
 
 Full detail: `docs/engineering-workflow.md` in the repo.
