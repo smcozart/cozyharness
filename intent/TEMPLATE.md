@@ -26,5 +26,5 @@ unambiguously verifiable.
 
 ## System-intent alignment
 
-One line: how this serves [SYSTEM-INTENT.md](../../SYSTEM-INTENT.md), or a note
-if it requires amending it.
+One line: how this serves root `SYSTEM-INTENT.md`, or a note if it requires
+amending it.
