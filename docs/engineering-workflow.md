@@ -27,7 +27,7 @@ records:
 
 ## Plan — issue-first intake and work-item intent
 
-Formalized in issue [#2](https://github.com/smcozart/cozyharness-plan/issues/2).
+Formalized in issue [#2](https://github.com/smcozart/cozyharness/issues/2).
 
 1. **Issue-first intake.** Every request — greenfield or brownfield — becomes
    a GitHub issue before any other artifact. The issue states the problem,
