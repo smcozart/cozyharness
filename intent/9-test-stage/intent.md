@@ -57,7 +57,8 @@ verified by the suite.
 - `tests/validate.sh` exists, runs from a clean checkout with only bash,
   git, grep/awk, and python3 (stdlib), exits 0 on `main` and prints one
   `ok:`/`FAIL:` line per check.
-- Every check has a witness, historic sha or one-line mutation, and
+- Every check has a witness, historic sha or one-line mutation (one per
+  clause for two-clause checks), and
   `tests/validate.sh --witness` runs all of them: bad sha / mutated tree →
   FAIL, good sha → ok; it exits 0 only if every row behaves as expected.
   The verbatim patterns and shas are in the spec, not deferred to tickets;
@@ -67,7 +68,8 @@ verified by the suite.
   failing on `1b41a31` and passing after.
 - `sync-rule` is symmetric (canonical doc **or** plugin SKILL.md touched ⇒
   all three touched) and range-aware (`<range>` arg, dirty tree, or last
-  commit); `a6519a9` → FAIL, `571afe4` → ok.
+  commit, where dirty = `git diff --quiet HEAD` non-zero, tracked files only);
+  `a6519a9` → FAIL, `571afe4` → ok.
 - `docs/engineering-workflow.md` has a `## Test` section; the same commit
   touches `plugin/skills/engineering-workflow/SKILL.md` and `README.md`
   (the sync check in the suite passes on that commit).

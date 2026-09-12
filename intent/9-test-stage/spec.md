@@ -83,15 +83,15 @@ before this spec was committed; the transcript is on #9.
 
 | Check | Rule (verbatim) | Witness |
 |---|---|---|
-| `sync-rule` | Over the *change set under test*, if **either** `docs/engineering-workflow.md` **or** `plugin/skills/engineering-workflow/SKILL.md` is touched, all three of {doc, SKILL.md, `README.md`} are touched. README-only edits pass (it carries non-process content: path table, quick start). Change set = `<range>` argument if given (e.g. `origin/main..HEAD` for a multi-commit PR); else the working tree + index vs `HEAD` if dirty; else `HEAD~1..HEAD`. The Test gate requires the close-time run to pass the ticket's range explicitly. | Historic: `a6519a9` (touched 1 of 3 → FAIL), `571afe4` (3 of 3 → ok). Verified. |
+| `sync-rule` | Over the *change set under test*, if **either** `docs/engineering-workflow.md` **or** `plugin/skills/engineering-workflow/SKILL.md` is touched, all three of {doc, SKILL.md, `README.md`} are touched. README-only edits pass (it carries non-process content: path table, quick start). Change set = `<range>` argument if given (e.g. `origin/main..HEAD` for a multi-commit PR); else, if `git diff --quiet HEAD` exits non-zero (tracked changes only — untracked files such as `.factory/` never trigger this branch), the working tree + index vs `HEAD`; else `HEAD~1..HEAD`. The Test gate requires the close-time run to pass the ticket's range explicitly. | Historic: `a6519a9` (touched 1 of 3 → FAIL), `571afe4` (3 of 3 → ok). Verified. |
 | `stage-parity` | `grep -cE '^## (Plan\|Design\|Build\|Test)\b'` = 4 in both the canonical doc and the plugin SKILL.md; `grep -cE '^(Plan\|Design\|Build\|Test) ─+►' README.md` = 4. | Historic: `1b41a31` → FAIL (doc has 3/4, `## Test` missing; SKILL 4/4; README 4/4). Verified. Fix lands in the doc ticket. |
-| `intent-layout` | Every *directory* under `intent/` (the two `TEMPLATE*.md` files are exempt by being files) matches `^[0-9]+-[a-z0-9-]+$`, contains `intent.md` whose `**Issue:** #<n>` equals the dir number; `spec.md`, if present, has `**Issue:** #<n>` and `` **Intent:** `intent/<n>-<slug>/intent.md` `` equal to its own path. | Mutation (automated, see `--witness`): `sed -i 's/#9/#8/' intent/9-test-stage/intent.md` → FAIL. |
-| `adr-numbering` | `docs/adr/*.md` names match `^[0-9]{4}-[a-z0-9-]+\.md$`, sequence is exactly 0001..N contiguous; each file has a `**Issue:**` header. | Mutation: `touch docs/adr/0009-x.md` → FAIL (gap). |
-| `adr-refs` | Every match of `ADR[ -][0-9]{4}` in AGENTS.md, CONTRIBUTING.md, README.md, CONTEXT.md, `docs/engineering-workflow.md`, `docs/adr/**`, `intent/**`, `plugin/**` resolves to an existing `docs/adr/<NNNN>-*.md`. Vendored skills and `docs/agents/*.md` (example prose) excluded. Because `adr-numbering` forces contiguity, the only way to satisfy a dangling reference is to rewrite it or to write the next-numbered ADR and repoint the text. | Historic: `1b41a31` → FAIL (`docs/engineering-workflow.md:204` references a number no file has). Verified. This spec has been scrubbed so it does not trip its own check. |
+| `intent-layout` | Every *directory* under `intent/` (the two `TEMPLATE*.md` files are exempt by being files) matches `^[0-9]+-[a-z0-9-]+$`, contains `intent.md` whose `**Issue:** #<n>` equals the dir number; `spec.md`, if present, has `**Issue:** #<n>` and `` **Intent:** `intent/<n>-<slug>/intent.md` `` equal to its own path. | Mutation (automated, see `--witness`): `python3 -c "p='intent/9-test-stage/intent.md';s=open(p).read().replace('#9','#8');open(p,'w').write(s)"` → FAIL. |
+| `adr-numbering` | `docs/adr/*.md` names match `^[0-9]{4}-[a-z0-9-]+\.md$`, sequence is exactly 0001..N contiguous; each file has a `**Issue:**` header. | Mutation: create an empty file named `0009-x.md` under the ADR directory → FAIL (gap). |
+| `adr-refs` | Every match of `grep -oiE 'adr[ -]?[0-9]{4}|docs/adr/[0-9]{4}'` (catches `ADR NNNN`, `ADR-NNNN`, `ADRNNNN`, lowercase `adr nnnn`, and the path form `docs/adr/NNNN-slug.md`; the four-digit group is what must resolve) in AGENTS.md, CONTRIBUTING.md, README.md, CONTEXT.md, `docs/engineering-workflow.md`, `docs/adr/**`, `intent/**`, `plugin/**` resolves to an existing `docs/adr/<NNNN>-*.md`. Vendored skills and `docs/agents/*.md` (example prose) excluded. Because `adr-numbering` forces contiguity, the only way to satisfy a dangling reference is to rewrite it or to write the next-numbered ADR and repoint the text. | Historic: `1b41a31` → FAIL (`docs/engineering-workflow.md:204` references a number no file has). Verified. This spec has been scrubbed so it does not trip its own check. |
 | `hooks-json` | `python3 -c 'import json,sys; d=json.load(open("plugin/hooks/hooks.json")); assert list(d)==["hooks"]; [ (h["type"],h["command"]) for ev in d["hooks"].values() for m in ev for h in m["hooks"] ]'` — parses, sole top-level key `hooks`, every entry has `type` + `command`. No external event-name list (would rot). | Mutation: append `,` before the final `}` → FAIL (parse). |
-| `skill-frontmatter` | For each tracked skill dir (`plugin/skills/*`, `.agents/skills/ponytail`, `.agents/skills/factory-orchestrator`): line 1 is `---`; a second `---` exists; between them `^name: <dirname>$` and `^description: .+` both match. awk, no YAML lib. | Mutation: `sed -i '/^name:/d' plugin/skills/factory-orchestrator/SKILL.md` → FAIL. |
+| `skill-frontmatter` | For each file in `git ls-files '*/skills/*/SKILL.md'` (today: the two `plugin/skills/*` and the two tracked `.agents/skills/*`; vendored/ignored skills are excluded by not being tracked): line 1 is `---`; a second `---` exists; between them `^name: <dirname>$` and `^description: .+` both match. awk, no YAML lib. | Mutation: `grep -v '^name:' plugin/skills/factory-orchestrator/SKILL.md > t && mv t plugin/skills/factory-orchestrator/SKILL.md` → FAIL. |
 | `skill-copies` | `cmp plugin/skills/factory-orchestrator/SKILL.md .agents/skills/factory-orchestrator/SKILL.md`. Kept because #5's contract ("both copies, byte-identical, one commit") has no other guard and the check is one line. | Mutation: `echo x >> .agents/skills/factory-orchestrator/SKILL.md` → FAIL. |
-| `agents-commands` | The `## Commands` block in AGENTS.md contains every name printed by `tests/validate.sh --list`, and no name that `--list` does not print (so the block can't go stale). | Mutation: delete one name from the block → FAIL. |
+| `agents-commands` | Tokenizer: `awk '/^## Commands/{c=1;next} /^## /{c=0} c' AGENTS.md \| grep -oE '`[a-z0-9-]+`' \| tr -d '`' \| sort -u` — every backticked lowercase-kebab token in the `## Commands` section (`tests/validate.sh` itself has a `/` and `.`, so it is not a token). That set must equal `tests/validate.sh --list \| sort -u`; a name missing or extra fails. | Mutation: delete one name from the block → FAIL. |
 
 **Regression half (claim checks from #8)**
 
@@ -105,12 +105,27 @@ amendment forbids. Paths: `FO` = `plugin/skills/factory-orchestrator/SKILL.md`.
 | Check | Claim (verbatim) | Bad sha → FAIL | Good sha → ok |
 |---|---|---|---|
 | `t1-trust-wording` | `FO`: `grep -q 'trust dialog is SKIPPED' && ! grep -qw REFUSES` | `7e8a195` (says "skips", no SKIPPED), `da9eb33` (says REFUSES) | `4e9b547` |
-| `t1-log-clobber` | `FO`: `! grep -qE '>log[[:space:]]'` — bare `>log ` redirect; `>log-<ticket>.log` does not match (the `[[:space:]]` is the word boundary). | `da9eb33` | `4e9b547`, `HEAD` |
+| `t1-log-clobber` | `FO`: `! grep -qE '>log[[:space:]]'` — bare `>log ` redirect; `>log-<ticket>.log` does not match (the `[[:space:]]` is the word boundary). | `da9eb33` | `4e9b547` |
 | `t1-spawn-session` | `FO`: `grep -qE '^- Spawn:.*--output-format'` — the Spawn line itself captures a session id (stream-json elsewhere in the file does not count; that is why `da9eb33` is still bad). | `7e8a195`, `da9eb33` | `4e9b547` |
 | `t3-label-drift` | `AGENTS.md`: `` grep -qF 'does NOT apply `ready-for-agent` at spec time' && ! grep -qF 'never auto-apply labels' `` | `43b63dc` | `92e6a25` |
 | `t3-precedence` | `AGENTS.md`: `grep -qF 'Overrides to the vendored skill:'` | `43b63dc` | `92e6a25` |
 
-All 13 sha runs above produced the expected verdict (transcript on #9).
+Two-clause checks carry one mutation witness **per clause** (a historic sha
+may exercise only one clause, so each clause proves itself):
+
+| Check | Clause | Mutation on the good-sha copy | Expect |
+|---|---|---|---|
+| `t1-trust-wording` | negative (`! grep -qw REFUSES`) | append a line `REFUSES` to a copy of `4e9b547:FO` | FAIL |
+| `t1-trust-wording` | positive (`SKIPPED`) | replace `trust dialog is SKIPPED` → `trust dialog is shown` | FAIL |
+| `t3-label-drift` | negative (`never auto-apply labels`) | append a line `never auto-apply labels` to a copy of `92e6a25:AGENTS.md` | FAIL |
+| `t3-label-drift` | positive (`does NOT apply …`) | replace `does NOT apply` → `does not apply` | FAIL |
+
+Check functions take a **file path** argument, never stdin — a two-clause
+check reading stdin consumes it in the first grep and the second clause
+silently passes (observed while producing the round-3 transcript).
+
+All sha runs and mutation runs above produced the expected verdict
+(transcripts on #9; check names in transcripts are the names in these tables).
 
 ### `--witness` mode
 
