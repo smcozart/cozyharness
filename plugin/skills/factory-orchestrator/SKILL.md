@@ -151,26 +151,32 @@ orchestrator pane), `herdr tab close` to retire.
 Spawn one non-interactive `claude -p` session per ticket inside a tmux window or
 as a background session; verified against `claude --help`:
 
-- Spawn: `claude -p "$(cat promptfile)"` in a fresh `tmux new-window`, or
-  `claude --bg` (prints a session id). `-p` skips the trust dialog — only run it
-  in a trusted checkout. One session per ticket, never reused.
+- Spawn: `claude -p "$(cat promptfile)" >log 2>&1` in a fresh `tmux new-window`
+  (redirect, or output is lost when the process exits), or `claude --bg` (prints a
+  session id). One session per ticket, never reused.
 - Poll: `claude agents --json` lists background sessions (add `--all` for
   completed ones); for tmux panes, process liveness plus the captured output.
-- Read: run with `--output-format stream-json` redirected to a log file and tail
-  it, or `tmux capture-pane -p -t <pane>`.
-- Ping: `-p` is one-shot — there is no mid-run stdin. Steer a finished or stalled
-  worker with a follow-up: `claude -p --resume <session-id> "<tighter-scope
-  directive>"`. Stop a runaway background session with `claude stop <id>`.
+- Read: tail the redirected log file (or `tmux capture-pane -p -t <pane>` for a
+  pane you didn't redirect); for a `--bg` session, `claude logs <id>` prints its
+  recent terminal output.
+- Ping: `-p` with default text input is one-shot, and `--input-format stream-json`
+  holds stdin open for follow-up turns — otherwise steer a finished or stalled
+  worker with `claude -p --resume <session-id> "<tighter-scope directive>"`. Stop
+  a runaway background session with `claude stop <id>`.
 - Close: a `-p` session exits at completion; `claude rm <id>` retires a
   background session, `tmux kill-window` retires a pane.
 - HANDOFF: no cross-session ping channel; the worker's final output line carries
   `HANDOFF: …` and the orchestrator greps the log/captured pane for it.
 
+Headless trust: in an untrusted directory a `-p` run REFUSES — the workspace
+trust dialog can't be answered non-interactively. Remedy: run interactive
+`claude` once and approve trust, then dispatch headless workers.
+
 ### Codex sessions
 
-`codex` is not installed on the reference machine, so no flags are asserted
-here — verify against `codex --help` on the host before dispatch. The mechanism
-is the generic one:
+`codex` is not installed on the reference machine; the following names the
+known `codex exec` entry point but every flag must be verified against
+`codex --help` on the host before dispatch. The mechanism is the generic one:
 
 - Spawn: one non-interactive exec session per ticket (`codex exec` with the
   worker prompt as its input), in its own terminal/pane or with output
