@@ -151,9 +151,11 @@ orchestrator pane), `herdr tab close` to retire.
 Spawn one non-interactive `claude -p` session per ticket inside a tmux window or
 as a background session; verified against `claude --help`:
 
-- Spawn: `claude -p "$(cat promptfile)" >log 2>&1` in a fresh `tmux new-window`
-  (redirect, or output is lost when the process exits), or `claude --bg` (prints a
-  session id). One session per ticket, never reused.
+- Spawn: `claude -p --output-format json "$(cat promptfile)" >log-<ticket>.log 2>&1`
+  in a fresh `tmux new-window` (redirect, or output is lost when the process
+  exits); the JSON output prints `session_id`, so Ping's resume-id is recoverable
+  (or pin `--session-id <uuid>` at spawn). `claude --bg` (prints a session id)
+  works too. One session per ticket, never reused.
 - Poll: `claude agents --json` lists background sessions (add `--all` for
   completed ones); for tmux panes, process liveness plus the captured output.
 - Read: tail the redirected log file (or `tmux capture-pane -p -t <pane>` for a
@@ -168,9 +170,9 @@ as a background session; verified against `claude --help`:
 - HANDOFF: no cross-session ping channel; the worker's final output line carries
   `HANDOFF: …` and the orchestrator greps the log/captured pane for it.
 
-Headless trust: in an untrusted directory a `-p` run REFUSES — the workspace
-trust dialog can't be answered non-interactively. Remedy: run interactive
-`claude` once and approve trust, then dispatch headless workers.
+Headless trust: `claude --help` says the workspace trust dialog is SKIPPED in
+non-interactive mode; "Only use this in directories you trust." Only dispatch
+headless workers in trusted checkouts.
 
 ### Codex sessions
 
