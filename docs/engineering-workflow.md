@@ -131,6 +131,38 @@ that moves work toward `ready-for-agent`.
    touches, preferring existing seams over new ones. The read order above is
    identical — in brownfield, step (5) simply has more to say.
 
+## Build — agents execute against the tracker
+
+Formalized across issues #2/#3; this section is the contract every host runs,
+whatever the harness. The frontier is the tracker:
+`gh issue list --label ready-for-agent`, blockers closed.
+
+1. **One ticket per agent session.** A fresh session (any harness — pi, Claude
+   Code, Codex) picks one `ready-for-agent` ticket, reads it in the Design §7
+   order (ticket → spec → ADRs → `CONTEXT.md` → code), and works nothing else.
+2. **Test-first, lean.** Red-green slices; stdlib first; shortest working diff;
+   no speculative abstractions. Every test guards behavior no other test covers.
+3. **ADRs during Build.** A decision that meets the ADR bar gets
+   `docs/adr/NNNN-slug.md` in the same change — committed and pushed
+   immediately. Workers cite the ADRs their ticket names.
+4. **`plan.md` is Build preparation.** Written after Design, it sequences
+   tickets and ADRs into execution order; it is an input to Build, not an
+   artifact Build owes.
+5. **Proof over claim.** Closing a ticket requires running its acceptance
+   criteria and pasting the commands + output into the issue. Failures reopen
+   the ticket with the failing command.
+6. **Bounce, don't improvise.** A ticket whose spec, ADR, or links are missing
+   goes back to Design with a comment saying what's missing — never worked
+   around.
+
+**Orchestration is optional and host-specific.** A single session can work the
+frontier serially. Parallel builds use whatever the host provides (herdr panes
+under pi, headless workers under Claude Code, etc.) under the same
+host-neutral rules — orchestrator never writes code, one ticket per worker,
+QC + adversarial review before blessing, workers end with a `HANDOFF:` ping,
+two consecutive QC failures halt the chain. Those rules live in the
+`factory-orchestrator` skill; the hosts change, the contract doesn't.
+
 ## Stage-by-stage map
 
 | Stage | Skill | When / where |

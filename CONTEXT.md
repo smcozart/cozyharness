@@ -64,7 +64,8 @@ _Avoid_: implementation (too loose — Build includes its proof obligations)
 
 **gate**:
 A recorded human decision that lets work cross a phase boundary. The Design
-gate is approval of the spec; the Triage gate is the `ready-for-agent` label;
-the Test gate is pasted verification output.
+gate is approval of the spec; the Test gate is pasted verification output.
+Triage is not a gate — it is a label state machine that ends at
+`ready-for-agent`.
 _Avoid_: sign-off (only the high-risk variant), approval (the act, not the
 record)

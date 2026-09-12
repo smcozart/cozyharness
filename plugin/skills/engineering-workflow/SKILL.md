@@ -84,12 +84,17 @@ written after Design, as Build preparation.
 
 ## Build — agents execute against the tracker
 
-One ticket per agent session. Workers cite relevant ADRs, respect blocking
+One ticket per agent session, worked in the Build read order (issue → spec →
+ADRs → `CONTEXT.md` → code). Workers cite relevant ADRs, respect blocking
 edges, keep diffs lean (stdlib first, test-first), and record new
-hard-to-reverse decisions as ADRs — pushed immediately. On large builds,
-workers run under an orchestrator (which never writes code itself; herdr for
-parallel panes — see the factory-orchestrator skill). Workers end with a
-HANDOFF ping to the orchestrator: what landed, ADRs written, followups.
+hard-to-reverse decisions as ADRs — pushed immediately. Closing a ticket
+requires pasted proof of its acceptance criteria. Orchestration is optional
+and host-specific (single session works the frontier serially; parallel
+builds use the host's mechanism — herdr panes under pi, headless workers
+under Claude Code — under the host-neutral rules in the factory-orchestrator
+skill: orchestrator never writes code, QC + adversarial review before
+blessing, HANDOFF ping, two-failure halt). Workers end with a HANDOFF ping
+to the orchestrator when orchestrated: what landed, ADRs written, followups.
 
 ## Test — proof over claim
 
