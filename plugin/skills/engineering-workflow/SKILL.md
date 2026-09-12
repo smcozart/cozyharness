@@ -27,13 +27,28 @@ Plan → Design → Build → Test → Deploy → Maintain ──► back to Pla
    ready-for-agent`. That sequence reconstructs full context from the repo
    alone — never from chat history.
 
-## Plan — the intent & the why
+## Plan — issue-first intake, intent & the why
 
-Produce an **intent** (file or epic-issue body): problem, desired **outcome**
-(not a task list), scope, non-goals. Bug fixes seed it from the diagnosis;
-features from the brief; PRDs from transcripts. The intent is the lighthouse —
-everything downstream is graded against it. Human approves scope before
-anything spins. No intent, no work.
+Every request becomes a GitHub issue **first** — problem, desired outcome,
+scope, non-goals. Multiple requests in one conversation split into separate
+issues (with blocking edges if related); one request, one issue, no side-lists
+in chat.
+
+After triage clarification, capture the agreed why as **work-item intent** at
+`intent/<issue-number>-<slug>/intent.md` (template: `intent/TEMPLATE.md`). The
+issue number joins issue, intent, branch, PR, and proof. Check the intent
+against `SYSTEM-INTENT.md` (the system's enduring purpose) — conflicts amend
+it deliberately or rewrite the intent. Bug fixes seed the intent from the
+diagnosis; features from the brief; PRDs from transcripts.
+
+**Approval:** normal work is approved conversationally in the issue thread
+(`ready-for-agent` = approved to proceed). High-risk work (security, data
+loss, irreversible migrations, public contracts) requires explicit human
+review sign-off in the issue, recorded as an ADR. No approved intent, no work.
+
+The intent is the lighthouse — everything downstream is graded against it.
+The Plan artifact is the intent; any `plan.md` (execution sequencing) is
+written after Design, as Build preparation.
 
 ## Design — structure the work, record the decisions
 
@@ -76,7 +91,9 @@ more reliable each revolution.
 
 ## Humans above the loop
 
-- **Instigating**: the intent — the one artifact only humans author.
+- **Instigating**: the intent — the one artifact only humans approve. Issues
+  first, one request per issue; intents live at
+  `intent/<issue-number>-<slug>/intent.md`, aligned with `SYSTEM-INTENT.md`.
 - **Directing**: the tracker arbitrates — labels + blocking edges decide flow.
 - **Governing**: review, scope approval, proof requirements at every seam.
 

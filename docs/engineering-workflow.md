@@ -8,7 +8,7 @@ running Claude Code or pi should follow it. Prerequisites: Matt Pocock skills in
 
 ```
 setup (once per repo)
-  → /to-questionnaire → /to-spec → /to-tickets → /triage loop
+  → issue-first intake → intent → /to-questionnaire → /to-spec → /to-tickets → /triage loop
   → /implement (per ticket, test-first) → /code-review + adversarial pass
   → ADRs + CONTEXT.md maintained continuously (domain-modeling)
   → /retro at milestones, /handoff at session end
@@ -25,10 +25,49 @@ records:
   ("blockers resolved, acceptance criteria defined").
 - **Domain docs**: `CONTEXT.md` at repo root, ADRs in `docs/adr/NNNN-slug.md`.
 
+## Plan — issue-first intake and work-item intent
+
+Formalized in issue [#2](https://github.com/smcozart/cozyharness-plan/issues/2).
+
+1. **Issue-first intake.** Every request — greenfield or brownfield — becomes
+   a GitHub issue before any other artifact. The issue states the problem,
+   desired outcome, scope, and non-goals. No side-lists in chat.
+2. **One request, one issue.** A conversation containing multiple requests is
+   split into separate issues (GitHub sub-issues or `Blocked by:` edges when
+   they depend on each other); each gets its own intent and lifecycle. Mixing
+   concerns in one issue hides scope from triage and review.
+3. **Work-item intent.** After triage clarification, capture the agreed why in
+   `intent/<issue-number>-<slug>/intent.md` (start from
+   [`intent/TEMPLATE.md`](../intent/TEMPLATE.md)). The issue number is the join
+   key: it ties the intent to the issue, later branch, run, PR, and pasted
+   proof.
+4. **System-intent alignment.** Greenfield work starts from
+   [`SYSTEM-INTENT.md`](../SYSTEM-INTENT.md); every work-item intent is checked
+   against it. Conflicts either amend SYSTEM-INTENT.md deliberately or rewrite
+   the intent.
+5. **Approval.** Normal work: conversational — the issue author/maintainer
+   approves scope in the issue thread (`ready-for-agent` on the ticket is the
+   recorded approval to proceed). High-risk work (security, data loss,
+   irreversible migrations, public contracts): explicit review — a designated
+   human reviewer signs off in the issue before Build, and the decision gets
+   an ADR.
+6. **Artifact chain.** intent → spec / ADRs / tickets → plan → code + tests →
+   pasted proof. Each stage consumes the previous artifact by reference (issue
+   number or path), never by copy-paste.
+7. **`plan.md` is Build preparation.** The Plan stage produces the *intent*.
+   Any `plan.md` (per-session implementation plan) is written after Design —
+   it sequences tickets and ADRs into an execution order and belongs to Build
+   preparation, not Plan.
+
+Both flows share this contract: **greenfield** seeds the intent from the brief
+or PRD against SYSTEM-INTENT.md; **brownfield** seeds it from the diagnosis,
+retro finding, or transcript, and checks it against the same system intent.
+
 ## Stage-by-stage map
 
 | Stage | Skill | When / where |
 |---|---|---|
+| Capture the intent | issue + `intent/<n>-<slug>/intent.md` | First, right after the issue exists (see **Plan — issue-first intake** above). |
 | Elicit requirements | `/to-questionnaire` | New feature with unknowns. Converts vague asks into answerable questions. |
 | Write the spec | `/to-spec` | After questionnaire. Spec is the durable artifact; reference it from issues. |
 | Break into tickets | `/to-tickets` | After spec. Tracer-bullet vertical slices; blocking edges declared per ticket (GitHub native blocking links). Never horizontal layers. |

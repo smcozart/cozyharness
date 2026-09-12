@@ -20,7 +20,9 @@ in hours, and **humans stay above the loop: instigating, directing, governing.**
   script, and config files that remove setup guesswork.
 
 ```
-Plan ────► intent: the why (outcome, scope, non-goals) — human-approved
+Plan ────► issue-first intake, then intent: the why (outcome, scope,
+          non-goals) at intent/<issue-number>-<slug>/intent.md,
+          aligned with SYSTEM-INTENT.md — human-approved
 Design ──► GitHub issues + blocking edges + labels + ADRs + tech-stack records
 Build ───► one ticket per agent session; workers cite ADRs, write ADRs
 Test ────► verification commands + output pasted into the closing issue

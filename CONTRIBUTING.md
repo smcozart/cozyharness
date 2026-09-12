@@ -6,9 +6,13 @@ system.
 
 ## The loop
 
-1. **Intent first.** Open an issue stating the problem, the desired outcome
-   (not a task list), scope, and non-goals. Changes without a clear why get
-   sent back to Plan.
+1. **Issue first, then intent.** Open an issue stating the problem, the desired
+   outcome (not a task list), scope, and non-goals — one request per issue;
+   split multi-request conversations. After triage clarification, capture the
+   approved why in `intent/<issue-number>-<slug>/intent.md` (template:
+   `intent/TEMPLATE.md`), aligned with `SYSTEM-INTENT.md`. Normal work is
+   approved conversationally in the issue; high-risk work needs explicit
+   review sign-off. Changes without a clear why get sent back to Plan.
 2. **Triage.** Issues move through the triage labels (`needs-triage`,
    `needs-info`, …) until they earn `ready-for-agent` = blockers resolved +
    acceptance criteria defined. See `docs/agents/`.
