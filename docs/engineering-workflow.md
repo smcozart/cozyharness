@@ -174,7 +174,8 @@ command is the contract, not any harness hook.
    `N ok, M failed`; non-zero exit means "not healthy." Closing a ticket
    pastes that run (full output + exit code) next to the acceptance-criteria
    output, passing the ticket's range explicitly (e.g. `origin/main..HEAD`).
-   A close missing it is reopened, same as a failed acceptance criterion.
+   A close missing either is reopened, same as a failed acceptance
+   criterion.
 2. **Fail-first.** A bug/defect fix pastes the pair: the check red on the bad
    version for the expected reason, then green on the fix. A new static check
    is admitted only with a witness — a historic sha it fails on, or a one-line
@@ -183,18 +184,21 @@ command is the contract, not any harness hook.
    witness through the same check functions (bad sha / mutated tree → FAIL,
    good sha → ok). A check whose witness stops failing is a broken check.
    Needs full history (`git fetch --unshallow` on a shallow clone).
-4. **Protection rule.** A diff that touches `tests/` and removes, narrows, or
-   reorders a check away from the path it guards is rejected in review unless
-   it cites the issue that retires the rule. Whoever fixes a checking surface
-   does not loosen the check that measures it in the same diff.
+4. **Protection rule.** A diff that removes, narrows, or reorders a check
+   away from the path it guards — or that removes or narrows content a
+   negative check guards (an absence check passes vacuously once its target
+   wording is deleted), in `tests/` or anywhere else — is rejected in review
+   unless it cites the issue that retires the rule. Whoever fixes a checking
+   surface does not loosen the check that measures it in the same diff.
 5. **Tests are not evals.** `tests/validate.sh` checks artifacts (a file says
    X, a commit touches Y) — deterministic, offline, bash + git + python3
    stdlib. Findings with no textual footprint stay in the eval ledger (#8);
    the eval harness waits on #1, as does CI wiring — the exit code is
    CI-ready.
 
-The check list lives in the `## Commands` block of `AGENTS.md` and is itself
-verified by the `agents-commands` check, so it cannot go stale.
+The check list lives in the `## Commands` block of `AGENTS.md`; the
+`agents-commands` check verifies the token set against `--list` (prose and
+grouping around the names are not verified).
 
 ## Stage-by-stage map
 

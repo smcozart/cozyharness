@@ -26,8 +26,8 @@ Plan ────► issue-first intake, then intent: the why (outcome, scope,
 Design ──► spec.md beside the intent; ADRs over the bar; vertical-slice
           tickets as child issues with blocking edges; approval gate
 Build ───► one ticket per agent session; workers cite ADRs, write ADRs
-Test ────► tests/validate.sh exits 0 (fail-first, protected checks) — run +
-          acceptance output pasted into the closing issue
+Test ────► tests/validate.sh exits 0 (fail-first; checks and the content
+          they guard protected) — full run + acceptance output pasted at close
 Deploy ──► branch protection is the gate
 Maintain ─► intake: retros/PRDs/transcripts feed the next cycle through Plan
 ```
