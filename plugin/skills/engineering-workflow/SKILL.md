@@ -60,8 +60,8 @@ written after Design, as Build preparation.
    (modules/interfaces/seams), constraints (system/UX/security), testing
    decisions, out of scope, open questions. Template:
    `intent/TEMPLATE-spec.md`.
-2. **ADRs**: decisions that are hard to reverse, surprising without context, or
-   real trade-offs get a one-paragraph record in `docs/adr/NNNN-slug.md`,
+2. **ADRs**: a decision that is hard to reverse, surprising without context,
+   or a real trade-off gets a one-paragraph record in `docs/adr/NNNN-slug.md`,
    committed and pushed immediately. Tech-stack preferences and conventions
    live here too — shared brain for every agent. Existing ADRs constrain new
    design: contradictions are surfaced or superseded, never silently

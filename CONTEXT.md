@@ -46,7 +46,7 @@ _Avoid_: spec, intent
 
 **ADR**:
 Architecture decision record in `docs/adr/NNNN-slug.md`. Written only when a
-decision is hard to reverse, surprising without context, and a real
+decision is hard to reverse, surprising without context, or a real
 trade-off; pushed immediately.
 _Avoid_: decision log entry, meeting note
 

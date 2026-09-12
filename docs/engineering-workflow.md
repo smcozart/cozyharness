@@ -89,7 +89,7 @@ that moves work toward `ready-for-agent`.
    A missing term is a signal: you're inventing language, or you found a
    real gap for `domain-modeling`.
 4. **ADRs participate in Design.** A design decision that is hard to
-   reverse, surprising without context, and a real trade-off gets an ADR in
+   reverse, surprising without context, or a real trade-off gets an ADR in
    `docs/adr/NNNN-slug.md`, committed and pushed immediately. The ADR names
    the issue it decides for; the spec header lists the ADRs it follows.
    Existing ADRs constrain new design: a contradiction is either surfaced
@@ -143,7 +143,7 @@ that moves work toward `ready-for-agent`.
 | Debugging | `/diagnosing-bugs` | When something is broken/slow, not during planned work. |
 | Review | `/code-review` | After each diff (or each batch). Two axes: standards + spec. |
 | Adversarial review | `adversary` subagent (pi) | Mandatory on agent-produced diffs. Breaks the author-boss bias loop. Claude equivalent: a second review pass with "assume this is wrong" instructions. |
-| Record decisions | `domain-modeling` | ADR bar: hard to reverse, surprising without context, a real trade-off. One paragraph, `docs/adr/NNNN-slug.md`, **commit and push** — an unpushed ADR is invisible. Visible in code ⇒ no ADR. |
+| Record decisions | `domain-modeling` | ADR bar: hard to reverse, surprising without context, or a real trade-off. One paragraph, `docs/adr/NNNN-slug.md`, **commit and push** — an unpushed ADR is invisible. Visible in code ⇒ no ADR. |
 | Shared vocabulary | `CONTEXT.md` via `domain-modeling` | Update when terminology shifts; consumers read it before issues. |
 | Milestone retro | `/retro` | At milestones or when a failure pattern repeats. Feed findings into ADRs or process edits. |
 | Session end | `/handoff` | Compact conversation → handoff doc for the next session. References artifacts by path; never duplicates them. |
