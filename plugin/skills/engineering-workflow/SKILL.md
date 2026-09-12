@@ -22,8 +22,8 @@ Plan → Design → Build → Test → Deploy → Maintain ──► back to Pla
    vocabulary (ending in `ready-for-agent`), and domain doc layout
    (`CONTEXT.md`, `docs/adr/`). Without it, to-tickets and triage have no
    defined destination. Run once per REPO, not per machine.
-3. Onboarding order for a fresh session on an existing repo: read
-   `AGENTS.md` → `docs/engineering-workflow.md` → `gh issue list --label
+3. Onboarding order for a fresh session on an existing repo: read `CLAUDE.md` or
+   `AGENTS.md` if present, then `docs/engineering-workflow.md` → `gh issue list --label
    ready-for-agent`. That sequence reconstructs full context from the repo
    alone — never from chat history.
 

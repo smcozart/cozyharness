@@ -24,8 +24,9 @@ gh api repos/<owner>/<repo>/rulesets -X POST \
   -F 'rules[][type]=deletion' -f 'enforcement=active'
 ```
 
-Fresh agent session on an existing repo: read `AGENTS.md` →
-`docs/engineering-workflow.md` → `gh issue list --label ready-for-agent`.
+Fresh agent session on an existing repo: read `CLAUDE.md` or `AGENTS.md` if
+present, then `docs/engineering-workflow.md` → `gh issue list --label
+ready-for-agent`.
 
 ## Install
 
