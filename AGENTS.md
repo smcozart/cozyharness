@@ -14,6 +14,10 @@ The five canonical triage-role labels, string-for-string (`needs-triage`, `needs
 
 Single-context: `CONTEXT.md` at repo root (created lazily), ADRs in `docs/adr/`. See `docs/agents/domain.md`.
 
+### Spec & ticket overrides
+
+`/to-spec` writes the spec to `intent/<n>-<slug>/spec.md` in the repo, never the issue body — link by path only (ADR 0001). `/to-spec` and `/to-tickets` never auto-apply labels: the Design approval gate comes first, then triage labels move.
+
 ## Engineering workflow
 
 The standard process (planning → tickets → triage → implement → review → ADRs) is documented in `docs/engineering-workflow.md`. Read it before running any engineering skill. It is tool-agnostic: the same pipeline applies under pi, Claude Code, or any agent that can read this repo and run `gh`.
