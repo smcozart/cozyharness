@@ -1,5 +1,8 @@
 # spec.md lives next to the intent, linked by issue number
 
+**Issue:** #3 · **Status:** accepted · **Intent:** `intent/3-design-stage/intent.md`
+(spec contract: `intent/TEMPLATE-spec.md`)
+
 A spec could live in the GitHub issue body (where `/to-spec` publishes by
 default) or in the repo. We chose the repo: `intent/<issue-number>-<slug>/spec.md`,
 a sibling of the work-item intent, with the issue body linking to it by path

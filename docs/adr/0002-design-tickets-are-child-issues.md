@@ -1,5 +1,8 @@
 # Design tickets are child issues of the design issue, with native blocking edges
 
+**Issue:** #3 · **Status:** accepted · **Intent:** `intent/3-design-stage/intent.md`
+(spec contract: `intent/TEMPLATE-spec.md`)
+
 A spec breaks into implementation tickets as GitHub **sub-issues of the design
 issue** (the parent that carried the intent through Plan), not as flat
 unrelated issues and not as task-list checkboxes inside one mega-issue.
