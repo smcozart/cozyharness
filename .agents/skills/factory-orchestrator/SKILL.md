@@ -131,3 +131,54 @@ not work.
 - Context meters: the context-footer extension shows live fill per pane
   (green <50%, yellow <75%, red ≥75%). A worker approaching yellow mid-ticket should
   finish its current slice, commit, and be replaced.
+
+## Mechanics by host
+
+Appendix — the host-neutrality seam: the per-ticket loop above is the contract and does not change per host — only the
+spawn/poll/ping/close mechanics do. Three hosts covered. Whatever the host, GitHub
+stays the frontier and the HANDOFF line in the worker's final output is the
+greppable fallback every host must satisfy.
+
+### herdr + pi (reference host)
+
+Use the Mechanics cheatsheet above as-is: `herdr tab create` / `herdr agent start
+--kind pi` to spawn, `herdr agent list` to poll, `herdr agent read` to inspect,
+`herdr agent prompt` to ping (including the worker's HANDOFF ping back into the
+orchestrator pane), `herdr tab close` to retire.
+
+### Claude Code headless
+
+Spawn one non-interactive `claude -p` session per ticket inside a tmux window or
+as a background session; verified against `claude --help`:
+
+- Spawn: `claude -p "$(cat promptfile)"` in a fresh `tmux new-window`, or
+  `claude --bg` (prints a session id). `-p` skips the trust dialog — only run it
+  in a trusted checkout. One session per ticket, never reused.
+- Poll: `claude agents --json` lists background sessions (add `--all` for
+  completed ones); for tmux panes, process liveness plus the captured output.
+- Read: run with `--output-format stream-json` redirected to a log file and tail
+  it, or `tmux capture-pane -p -t <pane>`.
+- Ping: `-p` is one-shot — there is no mid-run stdin. Steer a finished or stalled
+  worker with a follow-up: `claude -p --resume <session-id> "<tighter-scope
+  directive>"`. Stop a runaway background session with `claude stop <id>`.
+- Close: a `-p` session exits at completion; `claude rm <id>` retires a
+  background session, `tmux kill-window` retires a pane.
+- HANDOFF: no cross-session ping channel; the worker's final output line carries
+  `HANDOFF: …` and the orchestrator greps the log/captured pane for it.
+
+### Codex sessions
+
+`codex` is not installed on the reference machine, so no flags are asserted
+here — verify against `codex --help` on the host before dispatch. The mechanism
+is the generic one:
+
+- Spawn: one non-interactive exec session per ticket (`codex exec` with the
+  worker prompt as its input), in its own terminal/pane or with output
+  redirected to a per-ticket log. One session per ticket, never reused.
+- Poll: session/process liveness plus the tail of its captured output.
+- Ping: assume no mid-run steering channel. Steer by starting a follow-up exec
+  session against the same working tree carrying a tighter-scope directive
+  (numbered slices, commit after each).
+- Close: the session exits at completion; kill the process to abandon.
+- HANDOFF: the worker's final output line carries `HANDOFF: …`; the
+  orchestrator greps the captured output for it.
