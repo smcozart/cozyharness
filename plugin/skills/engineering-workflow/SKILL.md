@@ -72,7 +72,7 @@ written after Design, as Build preparation.
    (mechanics: `docs/agents/issue-tracker.md`), runnable acceptance criteria,
    and spec/ADR references. Triage labels move issues
    through their state machine; issues end as **`ready-for-agent`** (blockers
-   resolved + acceptance criteria defined + spec approved). The label is a
+   resolved + acceptance criteria defined). The label is a
    contract: no label, no work. The linked-issue graph IS the design.
 4. **Approval gate**: ordinary design is approved conversationally in the
    issue thread; high-risk work (security, data loss, irreversible

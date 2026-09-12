@@ -111,10 +111,11 @@ that moves work toward `ready-for-agent`.
    spec is posted in the issue thread and the maintainer's in-thread
    approval is the record. High-risk design (security, data loss,
    irreversible migrations, public contracts) requires an explicit human
-   sign-off comment in the issue plus an ADR for the decision. A ticket
-   earns `ready-for-agent` when its blockers are resolved, its acceptance
-   criteria are defined, and its spec has passed the applicable gate — no
-   label, no work.
+   sign-off comment in the issue plus an ADR for the decision. The gate
+   sits before labeling: tickets are cut from a spec only after it has
+   passed. A ticket then earns `ready-for-agent` on the standard two
+   conditions — blockers resolved + acceptance criteria defined. No label,
+   no work.
 7. **What Build reads, in order** (forward contract to the next stage): (1)
    `gh issue view <n> --comments` (the ticket, a child issue per ADR 0002),
    (2) follow the ticket body's spec-path reference (or its parent's
