@@ -173,9 +173,10 @@ command is the contract, not any harness hook.
    `ok: <check>` / `FAIL: <check> — <why>` line per check, then
    `N ok, M failed`; non-zero exit means "not healthy." Closing a ticket
    pastes that run (full output + exit code) next to the acceptance-criteria
-   output, passing the ticket's range explicitly (e.g. `origin/main..HEAD`).
-   A close missing either is reopened, same as a failed acceptance
-   criterion.
+   output, passing the ticket's range explicitly (e.g. `origin/main..HEAD`) —
+   for a bug/defect fix, plus the fail-first pair (red on the bad version,
+   then green). A close missing any of the run, the acceptance output, or
+   the pair (for fixes) is reopened, same as a failed acceptance criterion.
 2. **Fail-first.** A bug/defect fix pastes the pair: the check red on the bad
    version for the expected reason, then green on the fix. A new static check
    is admitted only with a witness — a historic sha it fails on, or a one-line

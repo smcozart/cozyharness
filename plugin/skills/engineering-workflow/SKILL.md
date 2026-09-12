@@ -101,8 +101,9 @@ to the orchestrator when orchestrated: what landed, ADRs written, followups.
 One command is the gate: `tests/validate.sh [<range>]` prints one
 `ok:`/`FAIL:` line per check, then `N ok, M failed`; non-zero exit means
 "not healthy." Closing a ticket pastes that run (full output + exit code,
-with the ticket's range) next to its acceptance-criteria output — never an
-assertion; a close missing either is reopened. Fail-first: a bug fix pastes
+with the ticket's range) — for a bug/defect fix, plus the fail-first pair
+(red on the bad version, then green) — never an assertion; a close missing
+any of the run, the acceptance output, or the pair (for fixes) is reopened. Fail-first: a bug fix pastes
 the check red on the bad version, then green; a new static check is admitted
 only with a witness (historic sha or one-line mutation), and
 `tests/validate.sh --witness` replays them all. Protection rule: a diff that
