@@ -1,7 +1,7 @@
 # Spec: Test-stage contract — `tests/validate.sh` as the proof gate
 
 **Issue:** #9 · **Intent:** `intent/9-test-stage/intent.md` ·
-**Status:** draft · **ADRs:** none yet (one candidate — see Design concerns)
+**Status:** approved · **ADRs:** none yet (one candidate — see Design concerns)
 
 ## Problem statement
 

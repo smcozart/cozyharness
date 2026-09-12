@@ -1,6 +1,6 @@
 # Intent: Test is its own stage — one local command is the proof gate
 
-**Issue:** #9 · **Status:** draft · **Type:** system-change
+**Issue:** #9 · **Status:** approved · **Type:** system-change
 
 ## Problem
 
