@@ -8,6 +8,8 @@
 #
 # Requires: bash, git, grep/awk, python3 (stdlib). Offline. Never mutates the
 # working tree — witness copies are `git worktree add` under $TMPDIR, trap-removed.
+# Witnesses run against HEAD worktrees (committed state), not the dirty tree —
+# deliberate: a witness proves the check's logic, the default run proves the tree.
 set -uo pipefail
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)" || exit 2
 
@@ -158,11 +160,10 @@ default_run() {
 
 # ---------- witness mode ----------
 BASE=  # every worktree and temp file lives under one mktemp dir; trap removes it all
-cleanup() { for w in "$BASE"/wt-*; do [ -d "$w" ] && git worktree remove --force "$w" >/dev/null 2>&1; done; rm -rf "$BASE"; }
-worktree() {  # worktree <sha> -> path
-  local p=$BASE/wt-$1
-  git worktree add --detach --quiet "$p" "$1" >/dev/null 2>&1 || { echo "!! cannot check out $1 (git fetch --unshallow?)"; exit 2; }
-  echo "$p"
+cleanup() { for w in "$BASE"/wt-*; do [ -d "$w" ] && git worktree remove --force "$w" >/dev/null 2>&1; done; rm -rf "$BASE"; git worktree prune; }
+worktree() {  # worktree <sha> -> sets W (no subshell: a failed add must abort, never a vacuous FAIL row)
+  W=$BASE/wt-$1
+  git worktree add --detach --quiet "$W" "$1" >/dev/null 2>&1 || { echo "!! cannot check out $1 (git fetch --unshallow?)" >&2; exit 2; }
 }
 wfail=0; wn=0
 expect() {  # expect <ok|FAIL> <label> <check> <arg>
@@ -187,12 +188,12 @@ witness_run() {
   # sha witnesses — static
   expect FAIL a6519a9 sync-rule 'a6519a9~1..a6519a9'
   expect ok   571afe4 sync-rule '571afe4~1..571afe4'
-  local w; w=$(worktree 1b41a31)
+  worktree 1b41a31; local w=$W
   expect FAIL 1b41a31 stage-parity "$w"
   expect FAIL 1b41a31 adr-refs "$w"
 
   # mutation witnesses — one-line mutations on a worktree copy of HEAD, reset between rows
-  local m; m=$(worktree HEAD)
+  worktree HEAD; local m=$W
   (cd "$m" && python3 -c "p='intent/9-test-stage/intent.md';s=open(p).read().replace('#9','#8');open(p,'w').write(s)")
   expect FAIL mutation intent-layout "$m"; reset_wt "$m"
   : >"$m/docs/adr/0009-x.md"
