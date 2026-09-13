@@ -31,8 +31,11 @@ Test ────► tests/validate.sh exits 0 (fail-first; checks and the conte
           pasted at close
 Deploy ──► review loop per REVIEW.md; merge gate pasted (review resolution,
           validate.sh run, adversary verdict, human checkoff for flagged
-          risk, preview proof for UI, branch-protection proof for merge
-          path — absent today: 403, human checkoff is the gate)
+          risk — suite-checked surfaces, CONTRIBUTING.md, docs/agents/,
+          security/trust boundaries, irreversible ops —, preview proof for
+          UI, branch-protection proof for merge path — absent today: 403,
+          human checkoff is the gate; a 401 is not evidence of absence —
+          authenticate first)
 Maintain ─► intake: retros/PRDs/transcripts feed the next cycle through Plan
 ```
 

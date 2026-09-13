@@ -89,11 +89,16 @@ The checklist a diff owes before it merges, pasted at the seam (ticket close
 here, PR for consumers): review findings resolved or carried with an owner,
 the pasted `tests/validate.sh [<range>]` run, the adversary verdict, a human
 checkoff for flagged-risk classes, preview proof for UI tickets, and
-branch-protection proof for merge-path tickets. Uses the defined terms
-`check` and `witness` exactly; the pasted run is the same evidence the Test
-gate records.
+branch-protection proof for merge-path tickets.
 _Avoid_: approval (the human checkoff is one item of the gate, not the
 whole), CI gate (none exists until #1)
+
+**merge-path**:
+A diff touching `tests/validate.sh`, the synced trio, or AGENTS.md — the
+surfaces that enforce the merge gate itself. Only these owe the gate's
+branch-protection proof; every other close marks it "n/a — not a merge-path
+ticket".
+_Avoid_: merge diff (any diff), gate surface (the file, not the change)
 
 **preview proof**:
 The visual-change evidence pasted at close of a UI ticket — a screenshot, a

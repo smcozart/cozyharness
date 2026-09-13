@@ -37,6 +37,10 @@ check_stage_parity() {
   s=$(grep -cE '^## (Plan|Design|Build|Test|Deploy)\b' "$r/$SK")
   m=$(grep -cE '^(Plan|Design|Build|Test|Deploy) (─)+►' "$r/README.md")
   [ "$d$s$m" = 555 ] || { why="expected 5 stage headings each; found doc=$d SKILL.md=$s README=$m"; return 1; }
+  d=$(grep -oE '^## (Plan|Design|Build|Test|Deploy)\b' "$r/$DOC" | grep -oE '(Plan|Design|Build|Test|Deploy)' | sort -u | wc -l | tr -d " ")
+  s=$(grep -oE '^## (Plan|Design|Build|Test|Deploy)\b' "$r/$SK" | grep -oE '(Plan|Design|Build|Test|Deploy)' | sort -u | wc -l | tr -d " ")
+  m=$(grep -oE '^(Plan|Design|Build|Test|Deploy) (─)+►' "$r/README.md" | grep -oE '(Plan|Design|Build|Test|Deploy)' | sort -u | wc -l | tr -d " ")
+  [ "$d$s$m" = 555 ] || { why="expected 5 distinct stage names each; found doc=$d SKILL.md=$s README=$m"; return 1; }
 }
 
 check_intent_layout() {
@@ -194,6 +198,7 @@ witness_run() {
 
   # mutation witnesses — one-line mutations on a worktree copy of HEAD, reset between rows
   worktree HEAD; local m=$W
+  expect ok baseline stage-parity "$m"
   (cd "$m" && python3 -c "p='intent/9-test-stage/intent.md';s=open(p).read().replace('#9','#8');open(p,'w').write(s)")
   expect FAIL mutation intent-layout "$m"; reset_wt "$m"
   : >"$m/docs/adr/0009-x.md"
@@ -210,6 +215,12 @@ witness_run() {
   expect FAIL 'mutation(-## Deploy SKILL)' stage-parity "$m"; reset_wt "$m"
   grep -v '^Deploy ' "$m/README.md" > "$m/t" && mv "$m/t" "$m/README.md"
   expect FAIL 'mutation(-Deploy README)' stage-parity "$m"; reset_wt "$m"
+  sed -i.bak 's/^## Deploy/## Test/' "$m/$DOC"
+  expect FAIL 'mutation(## Deploy→## Test)' stage-parity "$m"; reset_wt "$m"
+  sed -i.bak 's/^## Deploy/## Test/' "$m/$SK"
+  expect FAIL 'mutation(## Deploy→## Test SKILL)' stage-parity "$m"; reset_wt "$m"
+  sed -i.bak 's/^Deploy ──►/Test ──►/' "$m/README.md"
+  expect FAIL 'mutation(Deploy─►→Test README)' stage-parity "$m"; reset_wt "$m"
   # agents-commands: rewrite the ## Commands block with every --list name (control: ok), then all but one (FAIL)
   commands_block() { awk '/^## Commands/{c=1;next} /^## /{c=0} !c' "$m/AGENTS.md"; echo; echo '## Commands'; echo; list_checks | sed "$1" | sed 's/.*/`&`/' | tr '\n' ' '; echo; }
   commands_block '' > "$m/AGENTS.tmp" && mv "$m/AGENTS.tmp" "$m/AGENTS.md"

@@ -222,18 +222,21 @@ seam: this repo's ticket close, or a consumer's PR.
    (e) UI tickets only: preview proof pasted — screenshot, recording, or
    standing link (consumer obligation; this repo has no UI surface);
    (f) branch-protection proof for tickets touching the merge path, others
-   mark "n/a — not a merge-path ticket".
+   mark "n/a — not a merge-path ticket". Merge-path = any diff touching
+   `tests/validate.sh`, the synced trio, or AGENTS.md — the surfaces that
+   enforce the gate itself; everything else marks n/a.
 3. **Branch protection is verified, not assumed.** Any merge-path close runs
    `gh api repos/{owner}/{repo}/branches/main/protection` and pastes the
    result: the protection fields, or the recorded absence. Today: absence —
    the call returns 403 on this private free-plan repo, so the human
-   checkoff is the only enforcement until #1 unfreezes. No online check
-   joins `tests/validate.sh` (Test §5); this proof stays manual.
+   checkoff is the only enforcement until #1 unfreezes. An authentication
+   failure (401) is not evidence of absence — authenticate first. No online
+   check joins `tests/validate.sh` (Test §5); this proof stays manual.
 4. **Autonomy boundaries.**
 
    | Change class | Who merges |
    |---|---|
-   | Flagged risk: any surface a suite check asserts on (`tests/`, the synced trio, AGENTS.md, `intent/**`, `docs/adr/**`, `plugin/**`, `.agents/skills/**`, CONTEXT.md), plus `docs/agents/`, security/trust boundaries, and irreversible ops | Human checkoff, recorded in the thread, after a green gate |
+   | Flagged risk: any surface a suite check asserts on (`tests/`, the synced trio, AGENTS.md, CONTRIBUTING.md, `intent/**`, `docs/adr/**`, `plugin/**`, `.agents/skills/**`, CONTEXT.md), plus `docs/agents/`, security/trust boundaries, and irreversible ops | Human checkoff, recorded in the thread, after a green gate |
    | Everything else (prose, approved intents/specs, internal refactors) | Agent may land; the gate's pasted evidence is the record |
 
    Hooks/CI/release gates, when they exist (#1), are always
