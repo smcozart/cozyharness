@@ -47,8 +47,10 @@ loss, irreversible migrations, public contracts) requires explicit human
 review sign-off in the issue, recorded as an ADR. No approved intent, no work.
 
 The intent is the lighthouse — everything downstream is graded against it.
-The Plan artifact is the intent; any `plan.md` (execution sequencing) is
-written after Design, as Build preparation.
+The Plan artifact is the intent; an optional `plan.md` (ticket/ADR execution
+sequencing) is written after Design only for multi-ticket builds with a real
+order to record — single-ticket work skips it, and it is never the agent's
+always-kept per-session plan-before-code.
 
 ## Design — spec, ADRs, tickets, and the approval gate
 

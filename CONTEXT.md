@@ -42,9 +42,11 @@ issue number, never copied into the issue body.
 _Avoid_: design doc, RFC, plan
 
 **plan.md**:
-An execution sequencing for Build (ticket order against blocking edges),
-written after Design. Belongs to Build preparation, never to Plan.
-_Avoid_: spec, intent
+An optional execution sequencing for Build (ticket order against blocking
+edges), written after Design only when a multi-ticket build has a real order
+to record; single-ticket work skips it. Belongs to Build preparation, never
+to Plan, and is not the agent's per-session plan-before-code.
+_Avoid_: spec, intent, plan-before-code
 
 **ADR**:
 Architecture decision record in `docs/adr/NNNN-slug.md`. Written only when a

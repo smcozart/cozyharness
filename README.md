@@ -26,6 +26,8 @@ Plan ────► issue-first intake, then intent: the why (outcome, scope,
 Design ──► spec.md beside the intent; ADRs over the bar; vertical-slice
           tickets as child issues with blocking edges; approval gate
 Build ───► one ticket per agent session; workers cite ADRs, write ADRs
+          (optional plan.md sequences tickets for multi-ticket builds — not
+          the agent's per-session plan-before-code)
 Test ────► tests/validate.sh exits 0 (fail-first; checks and the content
           they guard protected) — run + acceptance output (+ pair for fixes)
           pasted at close

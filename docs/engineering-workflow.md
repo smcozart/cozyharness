@@ -54,10 +54,14 @@ Formalized in issue [#2](https://github.com/smcozart/cozyharness/issues/2).
 6. **Artifact chain.** intent → spec / ADRs / tickets → plan → code + tests →
    pasted proof. Each stage consumes the previous artifact by reference (issue
    number or path), never by copy-paste.
-7. **`plan.md` is Build preparation.** The Plan stage produces the *intent*.
-   Any `plan.md` (per-session implementation plan) is written after Design —
-   it sequences tickets and ADRs into an execution order and belongs to Build
-   preparation, not Plan.
+7. **`plan.md` is optional Build preparation.** The Plan stage produces the
+   *intent*. A `plan.md` — the ticket/ADR **execution sequencing** — is
+   written after Design only when a multi-ticket build has a real order or
+   blocking story to record; single-ticket work skips it, and nothing in the
+   suite or close proof requires it. It belongs to Build preparation, not
+   Plan, and is **not** the agent's plan-before-code (that stays an
+   always-kept per-session coding practice, never captured as `plan.md` — see
+   Build).
 
 Both flows share this contract: **greenfield** seeds the intent from the brief
 or PRD against SYSTEM-INTENT.md; **brownfield** seeds it from the diagnosis,
@@ -145,9 +149,12 @@ whatever the harness. The frontier is the tracker:
 3. **ADRs during Build.** A decision that meets the ADR bar gets
    `docs/adr/NNNN-slug.md` in the same change — committed and pushed
    immediately. Workers cite the ADRs their ticket names.
-4. **`plan.md` is Build preparation.** Written after Design, it sequences
-   tickets and ADRs into execution order; it is an input to Build, not an
-   artifact Build owes.
+4. **`plan.md` is optional Build preparation.** When a multi-ticket build has
+   a real order to record, a `plan.md` written after Design sequences tickets
+   and ADRs into execution order; it is an input to Build, not an artifact
+   Build owes, and single-ticket work skips it. This is distinct from the
+   agent's **plan-before-code** — the always-kept in-session practice of
+   planning before writing code, which is never captured as `plan.md`.
 5. **Proof over claim.** Closing a ticket requires running its acceptance
    criteria and pasting the commands + output into the issue. Failures reopen
    the ticket with the failing command.

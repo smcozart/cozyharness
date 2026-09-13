@@ -28,3 +28,11 @@ unambiguously verifiable.
 
 One line: how this serves root `SYSTEM-INTENT.md`, or a note if it requires
 amending it.
+
+---
+
+_`plan.md` is **optional** in this directory: create it only for a
+multi-ticket build with a real order or blocking story to record. When
+present it is the ticket/ADR **execution sequencing** — not the agent's
+per-session plan-before-code, which is an always-kept coding practice and
+never a file here._
