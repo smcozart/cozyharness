@@ -1,6 +1,6 @@
 # Board State
 
-**Updated:** 2026-09-13 (Hooks core closed; V1 milestone + Claude parity.) · maintain with each milestone.
+**Updated:** 2026-09-13 (lean-process pass + FO-skill fix landed) · maintain with each milestone.
 
 This is the **single live board** — the one file a fresh session reads first to
 answer "where are we?". It is a **pointer to the tracker**, never a duplicate:
@@ -12,8 +12,10 @@ which is **archival** (see `handoffs/README.md`) — not a second live board.
 
 **Closed with proof:** the six-stage loop — Plan #2 · Design #3 · Build #4 ·
 Test #9 · Deploy #12 · Maintain #15 — plus **Claude Code host parity #19/#20**
-and the **hooks-core landing #21/#22** (a7f7523). Milestone tag:
-`v1-harness-complete`.
+and the **hooks-core landing #21/#22** (a7f7523). **Lean-process pass:**
+light lane #24, single-source STATUS #25, optional plan.md #26 (plan-before-
+code preserved); factory-orchestrator report-back hardened (`73597d3`).
+Milestone tag: `v1-harness-complete`.
 
 ## Open (live frontier)
 
@@ -24,7 +26,10 @@ and the **hooks-core landing #21/#22** (a7f7523). Milestone tag:
 
 ## Queued next
 
-- **Claude-host pipeline pilot** — one real ticket through the full pipeline, Claude Code as orchestrator + worker (the agreed next intake).
+- **Claude-host pipeline pilot** — one real ticket through the full pipeline,
+  Claude Code as orchestrator + worker (the agreed next intake).
+- Future (when the operator cuts them): **pi event-advisor** (under #1),
+  **#23 refs-under-scrutiny** rework.
 
 ## How to stay on track (re-entry)
 
