@@ -69,6 +69,39 @@ For a large, half-planned piece it's the entrance ramp: walk research +
 drafted docs through intake, then the questionnaire → spec → grilling →
 ticket-cut gates split it into tractable slices before any code.
 
+## 4.5 Take the harness INTO your project (e.g. a RAG system)
+
+Everything above stands up the harness in THIS repo (cozyharness). When the
+work lives in a **different** codebase — say a RAG system you're planning —
+the harness travels there; it isn't cloned in wholesale:
+
+```bash
+# clone once, from this repo as a portable reference
+git clone git@github.com:smcozart/cozyharness.git /tmp/harness-ref
+cd /your-rag-project                                  # or wherever the work lives
+cp -R /tmp/harness-ref/bootstrap.sh \                # carry the scaffolding over
+      /tmp/harness-ref/skills-lock.json \
+      /tmp/harness-ref/plugin \
+      /tmp/harness-ref/.claude-plugin \
+      /tmp/harness-ref/AGENTS.md \
+      /tmp/harness-ref/CLAUDE.md .
+./bootstrap.sh                                         # installs hooks + skills + plugin
+gh auth login                                          # track via YOUR GitHub issues
+claude   # then run: /setup-matt-pocock-skills once, to scaffold the project's labels + ADR layout
+```
+
+Then the same cycle in §4 — issue-first
+intake → spec → tickets → build — runs against YOUR repo: the harness files
+now live in YOUR project, the SAME gate (`tests/validate.sh`), the same
+seams. Your intents live in `intent/<n>-<slug>/` — keep your OWN
+`SYSTEM-INTENT.md` and `CONTEXT.md` (your RAG's purpose and vocabulary) and
+write your OWN one-line `STATUS.md` for your board. Don't copy cozyharness's
+live `STATUS.md` — it's this project's board, not yours.
+
+> The git-seam guardrails from §1 install in your project too (`bootstrap.sh`
+> sets `core.hooksPath` locally). If the RAG lives on a different git host
+> (e.g. Azure DevOps), the git seams are the same — the gate travels.
+
 ## 5. Close with proof
 
 Closing pastes the acceptance-criteria output AND the
