@@ -7,7 +7,7 @@ cd "$(dirname "$0")"
 fail=0
 have() { command -v "$1" >/dev/null 2>&1; }
 
-echo "==> 1/4 Matt Pocock skills"
+echo "==> 1/5 Matt Pocock skills"
 if have claude; then
   if claude plugin install mattpocock-skills 2>&1 | grep -qE "already installed|Installing"; then
     echo "  ok: Claude managed plugin (mattpocock-skills)"
@@ -39,10 +39,10 @@ PY
   fi
 fi
 
-echo "==> 2/4 Vendored skills"
+echo "==> 2/5 Vendored skills"
 [ -f .agents/skills/ponytail/SKILL.md ] && echo "  ok: ponytail (tracked in repo)" || { echo "  !! ponytail missing"; fail=1; }
 
-echo "==> 3/4 Harness registration"
+echo "==> 3/5 Harness registration"
 if have gh && gh auth status >/dev/null 2>&1; then echo "  ok: gh authenticated"
 else echo "  !! run: gh auth login"; fail=1; fi
 if have claude; then
@@ -53,7 +53,17 @@ else
   echo "  -- claude not installed, skipping plugin registration"
 fi
 
-echo "==> 4/4 Optional tooling"
+echo "==> 4/5 Git hooks (local guardrail)"
+if [ "$(git config --local --get core.hooksPath 2>/dev/null)" = ".githooks" ]; then
+  echo "  ok: already configured (hooks: .githooks)"
+else
+  gp=$(git config --global --get core.hooksPath 2>/dev/null || true)
+  [ -n "$gp" ] && echo "  -- note: global core.hooksPath=$gp left intact; the local setting overrides it for this repo only"
+  if git config core.hooksPath .githooks; then echo "  ok: core.hooksPath -> .githooks (local)"
+  else echo "  !! git config core.hooksPath failed"; fail=1; fi
+fi
+
+echo "==> 5/5 Optional tooling"
 have herdr && echo "  ok: herdr" || echo "  -- herdr not installed (only needed for parallel orchestrated builds)"
 [ -f .env ] || [ ! -f .env.example ] || echo "  -- note: cp .env.example .env and fill in secrets (never committed)"
 
