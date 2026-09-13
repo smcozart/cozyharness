@@ -36,7 +36,7 @@ Deploy ──► review loop per REVIEW.md; merge gate pasted (review resolution
           UI, branch-protection proof for merge path — absent today: 403,
           human checkoff is the gate; a 401 is not evidence of absence —
           authenticate first)
-Maintain ─► intake: retros/PRDs/transcripts feed the next cycle through Plan
+Maintain ─► intake: retros/incidents feed back through Plan; fixed incident classes → eval ledger (#8)
 ```
 
 ## Quick start

@@ -135,10 +135,12 @@ exist (#1), are always human-authorized.
 
 ## Maintain — the intake point
 
-Retro findings, production learnings, and transcripts get structured into
-PRDs/intents and fed back through the full cycle. Feedback deposits into git
-(ADRs, workflow doc, new issues) rather than dying — the loop gets shorter and
-more reliable each revolution.
+Maintain is the intake point: retro findings, incident learnings, and
+transcripts become issues and work-item intents re-entering through Plan —
+findings become intents humans approve, never autonomous fixes; feedback
+deposits into git, never dies in chat. Every fixed incident class becomes
+text in the eval ledger (#8). Consumers owe a drift-detection rule set and
+a rehearsed rollback path; automation of the stage waits on #1.
 
 ## Humans above the loop
 

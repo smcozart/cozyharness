@@ -105,3 +105,18 @@ The visual-change evidence pasted at close of a UI ticket — a screenshot, a
 recording, or a standing link to the running preview. A consumer obligation;
 this repo has no UI surface, so the contract text only defines it.
 _Avoid_: demo (unrecorded), example artifact
+
+**intake point**:
+The Maintain seam where retro findings, incident-class learnings, and
+session transcripts are structured into issues and work-item intents and
+re-enter through Plan. Findings become intents humans approve — never
+autonomous fixes.
+_Avoid_: feedback loop (vague), incident process (reactive connotation)
+
+**eval ledger**:
+The corpus of prompt+check pairs for behaviors with no textual footprint
+for the suite to grep, tracked in issue #8. The ledger is a document;
+writes are text only until the eval harness exists (#1). Fixed incident
+classes land here per the Maintain section's eval-on-incident rule.
+_Avoid_: eval suite (nothing runs yet), regression tests (those are
+checks)

@@ -242,6 +242,32 @@ seam: this repo's ticket close, or a consumer's PR.
    Hooks/CI/release gates, when they exist (#1), are always
    human-authorized.
 
+## Maintain — closing the loop
+
+Maintain is the intake point: retro findings, incident-class learnings,
+and session transcripts get structured into issues and work-item intents
+and re-enter through Plan — findings become intents humans approve, never
+autonomous fixes. Feedback deposits into git (issues, ADRs, workflow
+doc, CONTEXT.md), never dies in chat; the loop gets shorter and more
+reliable each revolution.
+
+**Eval-on-incident:** every fixed incident class becomes eval material
+in the eval ledger (#8) — the Test §5 boundary; the ledger is a
+document, and the only permitted writes are text (no runner, scanner, or
+automation lands here until #1 unfreezes). Dismissed findings stay on
+record with a reason.
+
+**Consumer obligations (this repo has no production runtime — contract
+text only, same shape as preview proof):** a consumer of the Harness
+owes a drift-detection rule set for the metrics it runs the loop on
+(version-controlled config; detection deterministic, no model involved),
+and a rehearsed rollback path for what the loop may trigger at its
+highest tier. Both arrive as findings through the intake point, and
+fixed incident classes become eval material per the rule above.
+
+Automation of this stage — triggers, hooks, monitoring bands, rollback
+tooling — waits on #1.
+
 ## Stage-by-stage map
 
 | Stage | Skill | When / where |
