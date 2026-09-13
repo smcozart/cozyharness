@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-13 (Hooks core closed; V1 milestone + Claude parity.) · maintain with each milestone.
 
-This is the one file a fresh session reads first to answer "where are we?". It is a **pointer to the tracker**, never a duplicate — the tracker stays the system of record; STATUS.md only mirrors the current snapshot and the operator queue.
+This is the one file a fresh session reads first to answer "where are we?". It is a **pointer to the tracker**, never a duplicate — the tracker stays the system of record; STATUS.md only mirrors the current snapshot and the operator queue. Session context (why/hegemony of past decisions) lives in `handoffs/` (see `handoffs/README.md`).
 
 ## Where the board is
 
@@ -32,7 +32,7 @@ tests/validate.sh                     # the gate is the floor
 ```
 
 When you read this file, fetch the open issues — STATUS.md is a snapshot, the
-tracker is the truth. All gates are human (the paste checkoff, and the
+> tracker is the truth. All gates are human (the paste checkoff, and the
 merge-gate pasted proof); never let a hook replace that with an auto-yes.
 
 ## Maintain this file
