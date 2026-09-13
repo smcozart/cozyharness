@@ -91,10 +91,16 @@ not work.
 > 6. Handoff before idling (the orchestrator spins the session down after this):
 >    a. **ADRs**: if the diff landed a decision that is hard to reverse, surprising
 >       without context, or a real trade-off, write a one-paragraph record in
->       `docs/adr/NNNN-slug.md` (format: ADR-FORMAT via the domain-modeling skill;
->       earning bar in design.md §ADRs). Commit and PUSH it — an unpushed ADR is a
->       decision the orchestrator can't see.
->    b. **Final ping**: ping the orchestrator session directly — run
+>       `docs/adr/NNNN-slug.md` and PUSH it — an unpushed ADR is a decision the
+>       orchestrator can't see.
+>    b. **Report back — always.** A worker that finishes (or stops early) MUST
+>       leave a `HANDOFF:` line in its final in-buffer message, AND send the
+>       direct ping (step c). An idle pane with no `HANDOFF:` line is a dead
+>       spot: the orchestrator must treat it as stalled, read its screen, and
+>       reconcile it — never assume work landed. Sending only the underlying
+>       closure (issue, PR) does NOT satisfy the report-back contract; the
+>       orchestrator uses the `HANDOFF:` line to know you're truly done.
+>    c. **Final ping**: ping the orchestrator session directly — run
 >       `herdr agent prompt <ORCH_PANE_ID> "HANDOFF: ticket #N | closed=<yes/no> | pushed=<sha range> | ADRs=<ids or none> | followups=<one line or none>"`
 >       so the message lands inside the orchestrator's session. Also end your last
 >       in-buffer message with the same line as a greppable fallback. Then idle — do
