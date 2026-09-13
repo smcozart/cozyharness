@@ -33,10 +33,10 @@ check_sync_rule() {  # $1 = git range
 check_stage_parity() {
   local r=$1 d s m
   for f in "$DOC" "$SK" README.md; do [ -f "$r/$f" ] || { why="$f missing"; return 1; }; done
-  d=$(grep -cE '^## (Plan|Design|Build|Test)\b' "$r/$DOC")
-  s=$(grep -cE '^## (Plan|Design|Build|Test)\b' "$r/$SK")
-  m=$(grep -cE '^(Plan|Design|Build|Test) (─)+►' "$r/README.md")
-  [ "$d$s$m" = 444 ] || { why="expected 4 stage headings each; found doc=$d SKILL.md=$s README=$m"; return 1; }
+  d=$(grep -cE '^## (Plan|Design|Build|Test|Deploy)\b' "$r/$DOC")
+  s=$(grep -cE '^## (Plan|Design|Build|Test|Deploy)\b' "$r/$SK")
+  m=$(grep -cE '^(Plan|Design|Build|Test|Deploy) (─)+►' "$r/README.md")
+  [ "$d$s$m" = 555 ] || { why="expected 5 stage headings each; found doc=$d SKILL.md=$s README=$m"; return 1; }
 }
 
 check_intent_layout() {
@@ -204,6 +204,12 @@ witness_run() {
   expect FAIL mutation skill-frontmatter "$m"; reset_wt "$m"
   echo x >> "$m/.agents/skills/factory-orchestrator/SKILL.md"
   expect FAIL mutation skill-copies "$m"; reset_wt "$m"
+  grep -v '^## Deploy' "$m/$DOC" > "$m/t" && mv "$m/t" "$m/$DOC"
+  expect FAIL 'mutation(-## Deploy)' stage-parity "$m"; reset_wt "$m"
+  grep -v '^## Deploy' "$m/$SK" > "$m/t" && mv "$m/t" "$m/$SK"
+  expect FAIL 'mutation(-## Deploy SKILL)' stage-parity "$m"; reset_wt "$m"
+  grep -v '^Deploy ' "$m/README.md" > "$m/t" && mv "$m/t" "$m/README.md"
+  expect FAIL 'mutation(-Deploy README)' stage-parity "$m"; reset_wt "$m"
   # agents-commands: rewrite the ## Commands block with every --list name (control: ok), then all but one (FAIL)
   commands_block() { awk '/^## Commands/{c=1;next} /^## /{c=0} !c' "$m/AGENTS.md"; echo; echo '## Commands'; echo; list_checks | sed "$1" | sed 's/.*/`&`/' | tr '\n' ' '; echo; }
   commands_block '' > "$m/AGENTS.tmp" && mv "$m/AGENTS.tmp" "$m/AGENTS.md"

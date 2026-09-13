@@ -119,7 +119,17 @@ adversarial pass.
 
 ## Deploy — gated
 
-Standard pipeline; branch protection on main is the gate.
+Every diff is reviewed per `REVIEW.md` (code-review two axes + mandatory
+adversary pass on agent-produced diffs; findings tagged by risk class,
+resolved or carried with an owner — never by silence). The merge gate pastes:
+review resolution, `tests/validate.sh [<range>]` (Test §1), the adversary
+verdict, a human checkoff for flagged-risk classes (suite-checked surfaces,
+`docs/agents/`, security/trust boundaries, irreversible ops), preview proof
+for UI tickets, and branch-protection proof for merge-path tickets. Branch
+protection is verified, not assumed: today it is absent (403 on this repo),
+so the human checkoff is the only enforcement until #1 unfreezes.
+Everything else may land on a green gate; hooks/CI/release gates, when they
+exist (#1), are always human-authorized.
 
 ## Maintain — the intake point
 

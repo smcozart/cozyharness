@@ -201,6 +201,44 @@ The check list lives in the `## Commands` block of `AGENTS.md`; the
 `agents-commands` check verifies the token set against `--list` (prose and
 grouping around the names are not verified).
 
+## Deploy — review loop, merge gate, autonomy boundaries
+
+Formalized in issue [#12](https://github.com/smcozart/cozyharness/issues/12).
+Deploy is what a diff owes before it merges — the same checklist at either
+seam: this repo's ticket close, or a consumer's PR.
+
+1. **The review loop.** Every diff is reviewed against
+   [`REVIEW.md`](../REVIEW.md): the `code-review` skill's two axes plus a
+   mandatory `adversary` pass on agent-produced diffs. Findings are tagged by
+   risk class (Bugs / Security / Compliance) regardless of which pass
+   surfaced them; a finding is resolved by a fix commit or an explicit
+   carried-forward note in the tracker with an owner other than the author,
+   re-verified at the next operator checkpoint — never by silence. The
+   review thread (closing comment or PR) is the audit record.
+2. **The merge gate.** A close pastes, beside the Test gate's evidence:
+   (a) review findings resolved or carried with an owner; (b) the pasted
+   `tests/validate.sh [<range>]` run (Test §1); (c) the adversary verdict on
+   the diff; (d) a human checkoff for flagged-risk classes (table below);
+   (e) UI tickets only: preview proof pasted — screenshot, recording, or
+   standing link (consumer obligation; this repo has no UI surface);
+   (f) branch-protection proof for tickets touching the merge path, others
+   mark "n/a — not a merge-path ticket".
+3. **Branch protection is verified, not assumed.** Any merge-path close runs
+   `gh api repos/{owner}/{repo}/branches/main/protection` and pastes the
+   result: the protection fields, or the recorded absence. Today: absence —
+   the call returns 403 on this private free-plan repo, so the human
+   checkoff is the only enforcement until #1 unfreezes. No online check
+   joins `tests/validate.sh` (Test §5); this proof stays manual.
+4. **Autonomy boundaries.**
+
+   | Change class | Who merges |
+   |---|---|
+   | Flagged risk: any surface a suite check asserts on (`tests/`, the synced trio, AGENTS.md, `intent/**`, `docs/adr/**`, `plugin/**`, `.agents/skills/**`, CONTEXT.md), plus `docs/agents/`, security/trust boundaries, and irreversible ops | Human checkoff, recorded in the thread, after a green gate |
+   | Everything else (prose, approved intents/specs, internal refactors) | Agent may land; the gate's pasted evidence is the record |
+
+   Hooks/CI/release gates, when they exist (#1), are always
+   human-authorized.
+
 ## Stage-by-stage map
 
 | Stage | Skill | When / where |
@@ -214,7 +252,7 @@ grouping around the names are not verified).
 | Implement | `/implement` | Per ticket, one ticket per session. Test-first (red-green slices). Lean: stdlib first, shortest working diff. |
 | Test discipline | `/tdd` | Default mode inside implement. Every test justifies itself — guards behavior no other test covers. |
 | Debugging | `/diagnosing-bugs` | When something is broken/slow, not during planned work. |
-| Review | `/code-review` | After each diff (or each batch). Two axes: standards + spec. |
+| Review | `REVIEW.md`, `/code-review` | After each diff (or each batch). Two axes: standards + spec; policy per REVIEW.md. |
 | Adversarial review | `adversary` subagent (pi) | Mandatory on agent-produced diffs. Breaks the author-boss bias loop. Claude equivalent: a second review pass with "assume this is wrong" instructions. |
 | Record decisions | `domain-modeling` | ADR bar: hard to reverse, surprising without context, or a real trade-off. One paragraph, `docs/adr/NNNN-slug.md`, **commit and push** — an unpushed ADR is invisible. Visible in code ⇒ no ADR. |
 | Shared vocabulary | `CONTEXT.md` via `domain-modeling` | Update when terminology shifts; consumers read it before issues. |

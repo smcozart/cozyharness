@@ -83,3 +83,20 @@ Triage is not a gate — it is a label state machine that ends at
 `ready-for-agent`.
 _Avoid_: sign-off (only the high-risk variant), approval (the act, not the
 record)
+
+**merge gate**:
+The checklist a diff owes before it merges, pasted at the seam (ticket close
+here, PR for consumers): review findings resolved or carried with an owner,
+the pasted `tests/validate.sh [<range>]` run, the adversary verdict, a human
+checkoff for flagged-risk classes, preview proof for UI tickets, and
+branch-protection proof for merge-path tickets. Uses the defined terms
+`check` and `witness` exactly; the pasted run is the same evidence the Test
+gate records.
+_Avoid_: approval (the human checkoff is one item of the gate, not the
+whole), CI gate (none exists until #1)
+
+**preview proof**:
+The visual-change evidence pasted at close of a UI ticket — a screenshot, a
+recording, or a standing link to the running preview. A consumer obligation;
+this repo has no UI surface, so the contract text only defines it.
+_Avoid_: demo (unrecorded), example artifact
