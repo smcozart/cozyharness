@@ -102,6 +102,10 @@ check_skill_frontmatter() {
 check_skill_copies() {
   cmp -s "$1/$FO" "$1/.agents/skills/factory-orchestrator/SKILL.md" \
     || { why="$FO and .agents/skills/factory-orchestrator/SKILL.md differ (must be byte-identical)"; return 1; }
+  cmp -s "$1/$FO" "$1/.claude/skills/factory-orchestrator/SKILL.md" \
+    || { why="$FO and .claude/skills/factory-orchestrator/SKILL.md differ (must be byte-identical)"; return 1; }
+  cmp -s "$1/$SK" "$1/.claude/skills/engineering-workflow/SKILL.md" \
+    || { why="$SK and .claude/skills/engineering-workflow/SKILL.md differ (must be byte-identical)"; return 1; }
 }
 
 check_agents_commands() {
@@ -209,6 +213,8 @@ witness_run() {
   expect FAIL mutation skill-frontmatter "$m"; reset_wt "$m"
   echo x >> "$m/.agents/skills/factory-orchestrator/SKILL.md"
   expect FAIL mutation skill-copies "$m"; reset_wt "$m"
+  echo x >> "$m/.claude/skills/factory-orchestrator/SKILL.md"
+  expect FAIL 'mutation(.claude factory copy)' skill-copies "$m"; reset_wt "$m"
   grep -v '^## Maintain' "$m/$DOC" > "$m/t" && mv "$m/t" "$m/$DOC"
   expect FAIL 'mutation(-## Maintain)' stage-parity "$m"; reset_wt "$m"
   grep -v '^## Maintain' "$m/$SK" > "$m/t" && mv "$m/t" "$m/$SK"
