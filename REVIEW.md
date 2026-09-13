@@ -1,4 +1,4 @@
-# Review every diff against this policy. Findings are tagged with the pass that produced them.
+# Review every diff against this policy. Findings are tagged with the risk class they pose (see Passes).
 
 ## Passes
 
@@ -23,5 +23,5 @@ Do not review by eye what a check enforces mechanically:
 
 ## The loop
 
-- Reviewers give reviews per this policy: the `code-review` skill's two axes plus a mandatory `adversary` pass on agent-produced diffs. These passes and the adversary produce the findings; every finding is tagged with its pass from `## Passes`.
-- Authors resolve findings by a fix commit or an explicit carried-forward note — never by silence. A carried-forward note lives in the tracker with an owner other than the author, and is re-verified at the next operator checkpoint.
+- Reviewers give reviews per this policy: the `code-review` skill's two axes plus a mandatory `adversary` pass on agent-produced diffs. These passes and the adversary produce the findings; every finding is tagged with its risk class from `## Passes`.
+- Authors resolve findings by a fix commit or an explicit carried-forward note — never by silence. A carried-forward note lives in the tracker with an owner other than the author, and is re-verified at the next operator checkpoint (the between-tickets report where the operator releases work).
