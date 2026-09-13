@@ -3,7 +3,6 @@
 !.env.example
 .DS_Store
 __pycache__/
-.claude/skills/
 .agents/skills/*
 !.agents/skills/ponytail/
 !.agents/skills/factory-orchestrator/
