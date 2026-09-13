@@ -135,6 +135,54 @@ that moves work toward `ready-for-agent`.
    touches, preferring existing seams over new ones. The read order above is
    identical — in brownfield, step (5) simply has more to say.
 
+## Light lane — thin front end, same tail
+
+Formalized in issue [#24](https://github.com/smcozart/cozyharness/issues/24).
+The full front end (issue → intent → spec → grilling → tickets) is
+proportionate for a multi-ticket, protected-surface build; it is dead weight
+for a one-file doc tweak. The light lane is a **defined** thinner front end for
+small, low-risk work — the *same* tail (proof + human gate), a tapered head.
+
+**When the light lane applies — every line must hold:**
+
+- single-file or two-file change;
+- docs-only, or a non-speculative internal change;
+- touches no suite surface (`tests/validate.sh` or any path a check guards);
+- touches no synced trio (`docs/engineering-workflow.md`, the two
+  engineering-workflow `SKILL.md` copies, `README.md`);
+- touches no AGENTS.md / CONTRIBUTING.md / security or trust boundary /
+  irreversible op;
+- changes no public contract (schema, API, the label vocabulary);
+- earns no ADR (no hard-to-reverse, surprising, or real-trade-off decision);
+- carries no multi-edge blocker — not part of a multi-ticket effort.
+
+Fail any one line → heavy lane. When in doubt, heavy lane.
+
+**Light-lane shape (thinner head, identical tail):**
+
+1. A short `intent/<n>-<slug>/intent.md` only — problem, one-line outcome,
+   scope, acceptance criteria. **No** `spec.md`, **no** `plan.md`.
+2. The close is byte-for-byte the same obligation as every other close: the
+   ticket earns `ready-for-agent` on the same contract (blockers resolved +
+   acceptance criteria defined), and the close pastes the green
+   `tests/validate.sh [<range>]` run beside the acceptance output, then the
+   Deploy merge-gate items including the human checkoff.
+
+**It is a lane, not a loophole.** Nothing about the close gate relaxes.
+`ready-for-agent`, pasted proof, and the human gate are identical on both
+lanes — *only the front artifact tapers*. There is no auto-approval, no agent
+"judgement" that watches a small change self-approve, and no rule that a
+change "must always" carry a `plan.md`. The heavy lane stays mandatory for
+anything touching a protected surface or a multi-ticket effort.
+
+**Light vs heavy, worked.** Fixing a typo in
+`docs/training/onboarding-runbook.md` is light lane: one file, docs-only, no
+protected surface — a two-line `intent.md`, then the same
+green-suite-plus-checkoff close. Adding the light lane itself (this change) is
+heavy lane: it edits the synced trio, a suite-checked surface, so it owes the
+sync rule (three files, one commit) and merge-path branch-protection proof —
+the protected surface, not the size, forces the lane.
+
 ## Build — agents execute against the tracker
 
 Formalized across issues #2/#3; this section is the contract every host runs,

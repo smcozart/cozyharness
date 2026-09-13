@@ -69,6 +69,13 @@ held by the human operator; the agent never pre-decides scope.
    no label, no work.
 5. **Build** — one ticket per session, test-first, proof-over-claim.
 
+**Light lane** (small, low-risk change — single/two-file, docs-only or
+non-speculative, no protected surface, no ADR-earning decision, no multi-edge
+blocker): a short `intent.md` only (no `spec.md`/`plan.md`), then the *same*
+close — `ready-for-agent`, green `tests/validate.sh`, human checkoff. A defined
+lane, not a loophole; the close gate never relaxes. See the light-lane section
+of `docs/engineering-workflow.md`.
+
 For a large, half-planned piece it's the entrance ramp: walk research +
 drafted docs through intake, then the questionnaire → spec → grilling →
 ticket-cut gates split it into tractable slices before any code.

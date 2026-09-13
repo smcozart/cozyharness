@@ -84,6 +84,26 @@ always-kept per-session plan-before-code.
    Greenfield and brownfield run the same workflow; only the seed differs
    (brief/PRD vs diagnosis/retro).
 
+## Light lane — thin front end, same tail
+
+A small, low-risk change takes a thinner front end. It applies only when
+**every** line holds: single-file or two-file; docs-only or a non-speculative
+internal change; touches no suite surface (`tests/validate.sh` or any
+check-guarded path); touches no synced trio (`docs/engineering-workflow.md`,
+the two engineering-workflow `SKILL.md` copies, `README.md`); touches no
+AGENTS.md / CONTRIBUTING.md / security or trust boundary / irreversible op;
+changes no public contract (schema, API, label vocabulary); earns no ADR;
+carries no multi-edge blocker. Fail any one line → heavy lane.
+
+Shape: a short `intent/<n>-<slug>/intent.md` only — problem, one-line outcome,
+scope, acceptance — with **no** `spec.md` and **no** `plan.md`. The tail is
+identical to every close: the same `ready-for-agent` contract, the same pasted
+`tests/validate.sh [<range>]` proof, the same human checkoff. It is a defined
+lane, **not** a loophole — nothing about the close gate relaxes, there is no
+auto-approval and no agent judgement, and the heavy lane stays mandatory for
+any protected surface or multi-ticket effort. (Full detail:
+`docs/engineering-workflow.md`.)
+
 ## Build — agents execute against the tracker
 
 One ticket per agent session, worked in the Build read order (issue → spec →

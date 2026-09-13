@@ -77,6 +77,15 @@ or a one-line mutation that makes it fail. `tests/validate.sh --witness`
 replays them all; a witness that stops failing means the check is broken.
 _Avoid_: fixture, snapshot, example
 
+**light lane**:
+The thinner front end for a small, low-risk change: a short `intent.md`
+(problem, one-line outcome, scope, acceptance) with no `spec.md` and no
+`plan.md`. The tail is unchanged — same `ready-for-agent` contract, same
+pasted `tests/validate.sh` proof, same human gate. A defined lane, not a
+loophole; it applies only when nothing protected is touched (see the light-lane
+section of `docs/engineering-workflow.md`).
+_Avoid_: fast track, bypass, shortcut
+
 **gate**:
 A recorded human decision that lets work cross a phase boundary. The Design
 gate is approval of the spec; the Test gate is the pasted `tests/validate.sh`
