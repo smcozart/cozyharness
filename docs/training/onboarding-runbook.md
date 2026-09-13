@@ -1,5 +1,9 @@
 # Runbook: clone → bootstrap → first intake
 
+> **Read `STATUS.md` first** — it is the board-state snapshot: where the loop
+> is, what's open, and what's queued. This runbook is how to stand a machine
+> up; STATUS.md is where the process looks right now.
+
 Standing up the Harness on a machine (pi or Claude Code) and starting the
 first work item, end to end. README gives the one-liners; this walks through
 what should happen at each step and what "worked on" looks like.

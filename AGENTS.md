@@ -1,5 +1,10 @@
 # CozyHarness
 
+> **Start here:** read `STATUS.md` first — it is the board-state snapshot; the
+> open issues it mirrors are the live frontier. Then `CONTEXT.md` for the
+> vocabulary, this file for the contracts, and `docs/training/onboarding-runbook.md`
+> for standing up a machine.
+
 ## Agent skills
 
 ### Issue tracker
