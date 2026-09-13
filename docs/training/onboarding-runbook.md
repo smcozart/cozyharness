@@ -4,8 +4,9 @@
 > is, what's open, and what's queued. This runbook is how to stand a machine
 > up; STATUS.md is where the process looks right now.
 
-> Session context (why/curation) lives in `handoffs/pickup-handoff.md`
-> (repo-versioned); the open issues list is the live frontier.
+> `STATUS.md` is the single live board; `handoffs/` is archival session
+> context (repo-versioned), not a second live source. The open issues list is
+> the live frontier.
 
 Standing up the Harness on a machine (pi or Claude Code) and starting the
 first work item, end to end. README gives the one-liners; this walks through

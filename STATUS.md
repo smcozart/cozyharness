@@ -2,7 +2,11 @@
 
 **Updated:** 2026-09-13 (Hooks core closed; V1 milestone + Claude parity.) · maintain with each milestone.
 
-This is the one file a fresh session reads first to answer "where are we?". It is a **pointer to the tracker**, never a duplicate — the tracker stays the system of record; STATUS.md only mirrors the current snapshot and the operator queue. Session context (why/hegemony of past decisions) lives in `handoffs/` (see `handoffs/README.md`).
+This is the **single live board** — the one file a fresh session reads first to
+answer "where are we?". It is a **pointer to the tracker**, never a duplicate:
+the tracker stays the system of record; STATUS.md mirrors the current snapshot
+and the operator queue. Point-in-time session context lives in `handoffs/`,
+which is **archival** (see `handoffs/README.md`) — not a second live board.
 
 ## Where the board is
 
