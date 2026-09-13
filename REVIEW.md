@@ -2,7 +2,7 @@
 
 ## Passes
 
-Run all three on every diff — the ticket's diff range, stated explicitly in the review, the same way the Test gate requires a range ("agent-produced" means authored in an agent session). Tag each finding with its pass.
+Run all three on every diff — the ticket's diff range, stated explicitly in the review, the same way the Test gate requires a range ("agent-produced" means authored in an agent session). Tag each finding with the risk class it poses — Bugs, Security, or Compliance — regardless of which pass or axis surfaced it.
 
 - **Bugs** — logic errors, broken edge cases, regressions.
 - **Security** — injection, secrets, PII in logs.
@@ -24,4 +24,4 @@ Do not review by eye what a check enforces mechanically:
 ## The loop
 
 - Reviewers give reviews per this policy: the `code-review` skill's two axes plus a mandatory `adversary` pass on agent-produced diffs. These passes and the adversary produce the findings; every finding is tagged with its pass from `## Passes`.
-- Authors resolve findings by a fix commit or an explicit carried-forward note — never by silence. A carried-forward note lives in the tracker with an owner other than the author, and is re-verified at the next gate.
+- Authors resolve findings by a fix commit or an explicit carried-forward note — never by silence. A carried-forward note lives in the tracker with an owner other than the author, and is re-verified at the next operator checkpoint.
