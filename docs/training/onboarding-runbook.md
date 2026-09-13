@@ -17,6 +17,9 @@ gh auth login   # if flagged — GitHub Issues is the tracker
 - Installs the Matt Pocock skills (Claude plugin, or copies them into
   `.agents/skills/` for pi).
 - Registers the Claude plugin if Claude Code is present.
+- Installs the **local git-seam guardrails** (`core.hooksPath .githooks` —
+  pre-commit enforces the sync rule per-commit, pre-push runs the Test gate
+  before a push; silent when green).
 - Checks `gh` auth.
 
 "Worked" means: it exits clean (or only skips steps whose tool isn't
@@ -71,9 +74,14 @@ then the Deploy merge-gate items (review, adversary, human checkoff). See
 
 ## Caveats
 
-- **Enforcement is paper today.** Hooks (#1), the eval harness (#8), and two
-  carried findings (#18) are outstanding; gates are pasted-evidence plus
-  your human judgment until then. A green `validate.sh` is necessary, not
-  sufficient.
+- **Local guardrails, not a server.** The git-seam hooks (pre-commit
+  sync-rule, pre-push validate), installed by `bootstrap.sh`, are local and
+  bypassable by design: a clone that never bootstraps `core.hooksPath`, or a
+  `git push --no-verify` / `git commit --no-verify`, sails through unblocked
+  — there is no CI or branch protection on this private repo (403). A green
+  `validate.sh` is necessary, not sufficient.
+- **Still paper/staged:** the eval harness (#8) and two carried findings
+  (#18) are outstanding; gates like the merge gate are pasted-evidence plus
+  your human judgment. The hooks check only the deterministic seams.
 - **Private repo:** the clone needs `gh` auth and repo access on the new
   machine; GitHub Issues is the system of record.
