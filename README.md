@@ -42,10 +42,11 @@ Maintain ─► intake: retros/incidents feed back through Plan; fixed incident 
 ```
 
 **Light lane, computed.** `tests/validate.sh --lane <range>` classifies a
-diff from what git sees — **T0** (≤2 docs files, no protected surface: the
-gate is the review), **T1** (small, unprotected, or the board: one bounded
-adversary pass), **T2** (any protected surface, >2 files or >60 lines: the
-full review loop). T0/T1 take a thinner front end — a short `intent.md`,
+diff from what git sees, as an allow-list — **T0** (≤2 docs files, all in the
+light set: gate run + human checkoff, no adversary pass), **T1** (small and in
+the light set, or the board / runbook floor: one bounded adversary pass),
+**T2** (anything else — unknown paths, instruction files, deletes, >2 files
+or >60 lines: the full review loop). T0/T1 take a thinner front end — a short `intent.md`,
 **no** `spec.md`/`plan.md` — and a smaller review budget, and close through
 the *same* gate: `ready-for-agent`, pasted `tests/validate.sh`, human
 checkoff. The agent confirms two clauses the classifier cannot see (earns no

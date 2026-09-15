@@ -12,21 +12,26 @@ in the loop tiered verification to the change.
 
 **Decision.** Review effort is a function of a **lane**, and the lane is
 **computed by the Test gate**, not judged. `tests/validate.sh --lane <range>`
-classifies the diff from what git can see — file count, paths against a
-protected set, changed lines, whether the board was touched — and prints one
-`lane:` line pasted beside the gate run. **T0** (≤2 docs files, nothing
-protected): the gate run is the review, no adversary pass. **T1** (≤2 files,
-≤60 lines, unprotected — or any touch of `STATUS.md`, the first file a session
-reads): one bounded adversary pass, the diff's claims only, MED+ findings.
-**T2** (any protected surface, >2 files or >60 lines): the full loop as
-before. Two clauses git cannot see stay with the agent and are stated at
-close — *earns no ADR*, *not speculative* — and **escalation is the only
+classifies the diff from what git can see — file count, paths against an
+**allow-list** of light paths, changed lines, deletes, binaries, instruction
+files — and prints one `lane:` line, with resolved shas, pasted beside the
+gate run (the default gate run prints it too, over the same range). **T0**
+(≤2 docs files, all in the light set, none on the T1 floor): the gate run and
+the human checkoff, no adversary pass. **T1** (≤2 files, ≤60 lines, all in
+the light set — or any file on the T1 floor: `STATUS.md`, the first file a
+session reads; `docs/training/`, what a new human runs verbatim): one bounded
+adversary pass, the diff's claims only, MED+ findings. **T2** (everything
+else): the full loop as before. Unknown is heavy: a path the repo has not
+grown yet, a nested `CLAUDE.md`, an `.mcp.json`, a rename out of place (read
+as delete + add) all classify T2 without anyone remembering to extend a
+regex. Two clauses git cannot see stay with the agent and are filled in at
+close — `no-ADR=<y/n> not-speculative=<y/n>` — and **escalation is the only
 direction**: an agent may raise a computed lane, never lower it. Consumers
-extend the protected set with the surfaces their own checks guard; a consumer
-whose protected set is empty has not adopted the lane. The classifier is a
-mode, not a check — it never fails and is not in `--list` — but it carries
-witnesses in `--witness` (four historic ranges, two mutations) because a wrong
-lane is a wrong review budget.
+extend the light set with the paths they will review on a bounded budget; a
+verbatim copy is safe. A repo without `--lane`, or a PARTIAL range, is T2.
+The classifier is a mode, not a check — it never turns a line red and is not
+in `--list` — but it carries a witness per decision branch and per known
+evasion in `--witness`, because a wrong lane is a wrong review budget.
 
 **Rejected.** *Keep "adversary on everything"*: correct when it caught 13
 defects in a two-file skill PR, but it cannot distinguish that PR from a typo
@@ -34,10 +39,14 @@ fix, and the cost grows with every parallel worker. *Let the agent pick the
 tier*: that is the predicate this replaces; an untrusted judgement produces
 the full pass by default. *`merge=union` / skip review for docs*: docs here
 are executable — a SKILL.md tells agents what to run — which is exactly why
-the protected set, not the file extension, decides T2.
+the allow-list, not the file extension, decides T2. *A deny-list of protected
+paths* (the first cut, 2026-09-15): the adversary showed a rename of
+`REVIEW.md`, a nested `handoffs/CLAUDE.md` and a new `.mcp.json` all
+classifying light; a deny-list is unsafe by omission, an allow-list is safe.
 
 **Consequences.** T0 closes with no adversary artifact at all; that is
-deliberate and the `lane:` line is the record of why. The thresholds (2
+deliberate, the `lane:` line is the record of why, and the human checkoff
+stays on T0 so an agent's diff is never the last pair of eyes on itself. The thresholds (2
 files, 60 lines) are starting values, changed by amending this ADR with the
 evidence. The synced trio, `REVIEW.md` and `AGENTS.md ## Commands` changed in
 the same commit; the platform's `herdr-factory` QC step 3 ("adversary pass

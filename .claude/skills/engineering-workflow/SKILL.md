@@ -88,20 +88,22 @@ always-kept per-session plan-before-code.
 
 A small, low-risk change takes a thinner front end and a smaller review
 budget. **The lane is computed, then confirmed** (ADR 0003): run
-`tests/validate.sh --lane <range>` and paste its `lane:` line beside the
-gate run. **T0 trivial** — ≤2 files, all `*.md`, ≤60 lines, no protected
-surface or board: the gate run is the review, no adversary pass. **T1
-light** — ≤2 files, ≤60 lines, no protected surface, or any touch of
-`STATUS.md`: the gate run + one bounded adversary pass (the diff's claims,
-MED+ findings only). **T2 heavy** — any protected surface (`tests/`, hooks,
-the synced trio, AGENTS/CONTRIBUTING/REVIEW/CONTEXT/SYSTEM-INTENT,
-`docs/adr/`, `docs/agents/`, `intent/`, `plugin/`, skill copies,
-`bootstrap.sh`, `skills-lock.json`), >2 files or >60 lines: the full
-review loop. The classifier sees files, not meaning, so the agent states two
-clauses at close — **earns no ADR**, **not speculative** (no public contract,
-no multi-edge blocker) — and either failing means T2. Escalate only; never
-lower a computed lane. Consumers extend the protected set with their own
-guarded surfaces.
+`tests/validate.sh --lane <range>` over the ticket's full range and paste its
+`lane:` line beside the gate run. The classifier is an **allow-list** —
+unknown is heavy. **T0 trivial** — ≤2 files, all `*.md`, ≤60 lines, every
+file in the light set (`handoffs/`, `docs/training/`, `STATUS.md`, `LICENSE`
+here) and none on the T1 floor: the gate run + the human checkoff, no
+adversary pass. **T1 light** — same limits, or any file on the T1 floor
+(`STATUS.md`, `docs/training/`, `handoffs/README.md`, `handoffs/pickup-handoff.md`):
+the gate run + one bounded adversary pass (the diff's claims, MED+ findings
+only). **T2 heavy** — anything outside the light set, any instruction file
+wherever it sits (`CLAUDE.md`, `AGENTS.md`, `README.md`, `.mcp.json`,
+`.cursorrules`, `.gitmodules`), any delete or binary, >2 files or >60 lines:
+the full review loop. A range marked PARTIAL, a missing `--lane`, or no
+`lane:` line all mean **T2**. The classifier sees files, not meaning, so the
+agent fills in two clauses at close — `no-ADR=<y/n> not-speculative=<y/n>` —
+and any `n` means T2. Escalate only; never lower a computed lane. Consumers
+extend the light set, never the heavy one.
 
 Shape: a short `intent/<n>-<slug>/intent.md` only — problem, one-line outcome,
 scope, acceptance — with **no** `spec.md` and **no** `plan.md`. The tail is

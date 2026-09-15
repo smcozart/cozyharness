@@ -151,19 +151,28 @@ lane is visible to git — how many files, which paths, how many lines — so
 
 | Lane | Computed trigger | Review owed |
 |---|---|---|
-| **T0 trivial** | ≤2 files, all `*.md`, ≤60 lines, none on a protected surface or the board | the gate run. No adversary pass — the gate is the review. |
-| **T1 light** | ≤2 files, ≤60 changed lines, no protected surface — or **any** touch of the board (`STATUS.md`), whatever else holds | the gate run + one **bounded** adversary pass: correctness of the diff's claims only, findings MED and above, no scope sweep |
-| **T2 heavy** | any protected surface — `tests/`, hooks, the synced trio, `AGENTS.md` / `CONTRIBUTING.md` / `REVIEW.md` / `CONTEXT.md` / `SYSTEM-INTENT.md`, `docs/adr/`, `docs/agents/`, `intent/`, `plugin/`, skill copies, `bootstrap.sh`, `skills-lock.json` — or >2 files, or >60 lines | the full review loop: `REVIEW.md` axes + the unbounded adversary pass |
+| **T0 trivial** | ≤2 files, all `*.md`, ≤60 lines, every file in the **light set** and none on the T1 floor | the gate run + the human checkoff. No adversary pass. (On this repo only the archival `handoffs/*.md` qualify.) |
+| **T1 light** | ≤2 files, ≤60 changed lines, every file in the light set — or any file on the **T1 floor**: the board `STATUS.md`, `docs/training/` (a human runs it), `handoffs/README.md`, `handoffs/pickup-handoff.md` | the gate run + one **bounded** adversary pass: correctness of the diff's claims only, findings MED and above, no scope sweep |
+| **T2 heavy** | **everything else** — any file outside the light set (the light set here is `handoffs/`, `docs/training/`, `STATUS.md`, `LICENSE`; every other path, including ones the repo has not grown yet, is heavy), any instruction file wherever it sits (`CLAUDE.md`, `AGENTS.md`, `README.md`, `.mcp.json`, `.cursorrules`, `.gitmodules`), any delete, any binary, >2 files, or >60 lines | the full review loop: `REVIEW.md` axes + the unbounded adversary pass |
+
+The classifier is an **allow-list**: unknown is heavy, which is what "when in
+doubt, heavy lane" means when a script says it. It reads renames as
+delete + add, so moving a contract file out of place is the delete it is,
+and it prints the resolved shas of the range it classified; a range whose
+base is not the merge-base with `main` is marked **PARTIAL** and is not valid
+for a close — the lane is always computed over the ticket's full range. If
+`--lane` is absent in a repo, or prints no `lane:` line, **the lane is T2.**
 
 The classifier sees files, not meaning. Two clauses therefore stay with the
-agent and are stated in the close beside the `lane:` line: **earns no ADR**
-(no hard-to-reverse, surprising, or real-trade-off decision) and **not
-speculative** (no public contract — schema, API, label vocabulary — and no
-multi-edge blocker). Either fails → T2. **Escalation is the only direction:**
-an agent may raise a computed lane and never lower it; when in doubt, heavy
-lane. Consumers extend the protected set in their own `validate.sh` with the
-surfaces their checks guard (`src/`, infrastructure, security paths) — a
-consumer whose protected set is empty has not adopted the lane.
+agent and are filled in at close beside the `lane:` line —
+`no-ADR=<y/n> not-speculative=<y/n>` — **earns no ADR** (no hard-to-reverse,
+surprising, or real-trade-off decision) and **not speculative** (no public
+contract — schema, API, label vocabulary — and no multi-edge blocker). Any
+`n` → T2. **Escalation is the only direction:** an agent may raise a computed
+lane and never lower it. Consumers extend the light set in their own
+`validate.sh` with the paths they are prepared to review on a bounded budget
+(a journal of append-only fragments, archival handoffs) — a verbatim copy is
+safe, because everything it does not name is heavy.
 
 The light lane below is **T0 and T1**; the heavy lane is **T2**.
 
@@ -185,16 +194,18 @@ and it can only escalate. No rule says a change "must always" carry a
 `plan.md`. The heavy lane stays mandatory for anything touching a protected
 surface or a multi-ticket effort, and the classifier makes that mechanical.
 
-**Light vs heavy, worked.** Fixing a typo in
-`docs/training/onboarding-runbook.md` is **T0**: one file, docs-only, no
-protected surface — `--lane` says so, a two-line `intent.md`, the gate run,
-close; no adversary pass. Refreshing the board is **T1**: `STATUS.md` is the
-first file a session reads, so it owes one bounded pass even at one file.
-Adding the light lane itself (#24), or this tiering (ADR 0003), is **T2**: it
-edits the synced trio and `tests/validate.sh`, suite-checked surfaces, so it
-owes the sync rule (three files, one commit), the full adversary pass and
-merge-path branch-protection proof — the protected surface, not the size,
-forces the lane.
+**Light vs heavy, worked.** Fixing a typo in an archival
+`handoffs/design-stage-handoff.md` is **T0**: one file, docs-only, in the
+light set — `--lane` says so, a two-line `intent.md`, the gate run, the human
+checkoff, close; no adversary pass. Fixing a typo in
+`docs/training/onboarding-runbook.md` is **T1**: the runbook's fenced blocks
+are what a new human runs verbatim, so it floors at T1 and owes one bounded
+pass even at one line; refreshing the board is T1 for the same reason —
+`STATUS.md` is the first file a session reads. Adding the light lane itself
+(#24), or this tiering (ADR 0003), is **T2**: it edits the synced trio and
+`tests/validate.sh`, which are outside the light set, so it owes the sync
+rule (three files, one commit), the full adversary pass and merge-path
+branch-protection proof — the path, not the size, forces the lane.
 
 ## Build — agents execute against the tracker
 
@@ -309,7 +320,7 @@ seam: this repo's ticket close, or a consumer's PR.
    | Change class | Who merges |
    |---|---|
    | Flagged risk: any surface a suite check asserts on (`tests/`, the synced trio, AGENTS.md, CONTRIBUTING.md, `intent/**`, `docs/adr/**`, `plugin/**`, `.agents/skills/**`, CONTEXT.md), plus `docs/agents/`, security/trust boundaries, and irreversible ops | Human checkoff, recorded in the thread, after a green gate |
-   | Everything else (prose, approved intents/specs, internal refactors) | Agent may land; the gate's pasted evidence is the record |
+   | Everything else (prose, approved intents/specs, internal refactors) | Agent may land; the gate's pasted evidence is the record — **except a T0 close**, which keeps the human checkoff: it is the one tier with no adversary artifact (ADR 0003) |
 
    Hooks/CI/release gates, when they exist (#1), are always
    human-authorized.
@@ -354,7 +365,7 @@ tooling — waits on #1.
 | Test discipline | `/tdd` | Default mode inside implement. Every test justifies itself — guards behavior no other test covers. |
 | Debugging | `/diagnosing-bugs` | When something is broken/slow, not during planned work. |
 | Review | `REVIEW.md`, `/code-review` | After each diff (or each batch). Two axes: standards + spec; policy per REVIEW.md. |
-| Adversarial review | `adversary` subagent (pi) | Mandatory on agent-produced diffs. Breaks the author-boss bias loop. Claude equivalent: a second review pass with "assume this is wrong" instructions. |
+| Adversarial review | `adversary` subagent (pi) | On agent-produced diffs, sized to the computed lane (ADR 0003): full at T2, bounded to the diff's claims at T1, none at T0 where the human checkoff is the second pair of eyes. Breaks the author-boss bias loop. Claude equivalent: a second review pass with "assume this is wrong" instructions. |
 | Record decisions | `domain-modeling` | ADR bar: hard to reverse, surprising without context, or a real trade-off. One paragraph, `docs/adr/NNNN-slug.md`, **commit and push** — an unpushed ADR is invisible. Visible in code ⇒ no ADR. |
 | Shared vocabulary | `CONTEXT.md` via `domain-modeling` | Update when terminology shifts; consumers read it before issues. |
 | Milestone retro | `/retro` | At milestones or when a failure pattern repeats. Feed findings into ADRs or process edits. |

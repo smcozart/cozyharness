@@ -43,7 +43,7 @@ frontier is GitHub, nothing in a file outranks it.
    never a vague "please fix." Also: did this diff smuggle in a decision that needed
    an ADR?
 
-   **Adversarial pass (mandatory):** the orchestrator's own QC is a single point of
+   **Adversarial pass (sized to the lane — ADR 0003; full at T2, bounded at T1):** the orchestrator's own QC is a single point of
    bias — it inherits the orchestrator's assumptions (a brittle gate spec, a wrong
    guess at what a worker will write). Run the **`adversary` subagent** on the diff
    (agentScope `project`; hostile review that assumes the change is wrong: edge cases,

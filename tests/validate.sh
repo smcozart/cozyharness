@@ -20,33 +20,65 @@ SK=plugin/skills/engineering-workflow/SKILL.md
 CHECKS="sync-rule stage-parity intent-layout adr-numbering adr-refs hooks-json skill-frontmatter skill-copies agents-commands t1-trust-wording t1-log-clobber t1-spawn-session t3-label-drift t3-precedence"
 
 # ---------- lane classifier (Deploy: review effort follows the lane; ADR 0003) ----------
-# A classifier, not a check: it prints one `lane:` line to paste beside the gate run and never fails.
-# It sees files, not meaning — the agent still confirms "earns no ADR" and "not speculative", and may
-# only ESCALATE the printed lane. Consumers extend LANE_PROTECTED with their own suite surfaces
-# (src/, infrastructure/, security paths); LANE_BOARD is the file a fresh session reads first.
-LANE_PROTECTED='^(tests/|\.githooks/|\.github/|plugin/|\.agents/|\.claude/|\.claude-plugin/|\.pi/|\.gitignore$|\.gitattributes$|docs/adr/|docs/agents/|intent/|AGENTS\.md$|CLAUDE\.md$|CONTRIBUTING\.md$|REVIEW\.md$|CONTEXT\.md$|SYSTEM-INTENT\.md$|README\.md$|docs/engineering-workflow\.md$|bootstrap\.sh$|skills-lock\.json$)'
-LANE_BOARD='^STATUS\.md$'
+# A classifier, not a check: it prints one `lane:` line to paste beside the gate run. It is an
+# ALLOW-list — only paths in LANE_LIGHT may take a reduced budget; everything else, including every
+# path this repo has not grown yet, is T2. Renames are read as delete+add (--no-renames) so a move out
+# of a protected path is the delete it is; quotePath is off so non-ASCII paths still match. Instruction
+# files (LANE_NEVER) are T2 wherever they sit; deletes and binaries are T2. The agent still confirms
+# "earns no ADR" and "not speculative", and may only ESCALATE the printed lane.
+# Consumers extend LANE_LIGHT (safe by omission) and LANE_FLOOR_T1 (light files a session acts on).
+LANE_LIGHT='^(handoffs/|docs/training/|STATUS\.md$|LICENSE$)'
+LANE_FLOOR_T1='^(STATUS\.md$|docs/training/|handoffs/(README|pickup-handoff)\.md$)'
+LANE_NEVER='(^|/)(CLAUDE|AGENTS|GEMINI|COPILOT|README)\.md$|(^|/)\.(cursorrules|mcp\.json|gitmodules)$'
 LANE_MAX_FILES=2; LANE_MAX_LINES=60
-lane_of() {  # lane_of <root> <range> -> sets lane (T0|T1|T2) and lane_why; rc 2 only if git diff fails
-  local r=$1 range=$2 files n prot lines
-  files=$(git -C "$r" diff --name-only "$range" 2>/dev/null) || { lane=T2; lane_why="git diff $range failed — heavy by default"; return 2; }
-  [ -n "$files" ] && { n=$(grep -c . <<<"$files"); } || { lane=T0; lane_why="empty range"; return 0; }
-  prot=$(grep -E "$LANE_PROTECTED" <<<"$files" | tr '\n' ' ')
-  lines=$(git -C "$r" diff --numstat "$range" | awk '{a+=$1; d+=$2} END{print a+d+0}')
-  if   [ -n "$prot" ];                       then lane=T2; lane_why="protected surface: ${prot% }"
+lane_of() {  # lane_of <root> <range> -> sets lane (T0|T1|T2|none) and lane_why; rc 2 when there is no lane
+  local r=$1 range=$2 st files n never outside del ns lines bin untracked="" o
+  st=$(git -C "$r" -c core.quotePath=off diff --no-renames --name-status "$range" 2>/dev/null) || { lane=none; lane_why="git diff $range failed — fix the range"; return 2; }
+  # the dirty tree includes untracked files; `git diff HEAD` does not list them, so a new file would otherwise vanish from the lane
+  [ "$range" != HEAD ] || untracked=$(git -C "$r" -c core.quotePath=off ls-files --others --exclude-standard)
+  [ -n "$st$untracked" ] || { lane=none; lane_why="empty range — fix the range"; return 2; }
+  files=$({ [ -z "$st" ] || cut -f2- <<<"$st"; [ -z "$untracked" ] || printf '%s
+' "$untracked"; }); n=$(grep -c . <<<"$files")
+  del=$(awk -F'\t' '$1 ~ /^D/ {print $2}' <<<"$st" | tr '\n' ' ')
+  never=$(grep -E "$LANE_NEVER" <<<"$files" | tr '\n' ' ')
+  outside=$(grep -vE "$LANE_LIGHT" <<<"$files" | tr '\n' ' ')
+  ns=$(git -C "$r" -c core.quotePath=off diff --no-renames --numstat "$range" | awk -F'\t' '$1=="-"||$2=="-"{b=1} {a+=$1; d+=$2} END{print a+d+0, b+0}')
+  lines=${ns%% *}; bin=${ns##* }
+  while IFS= read -r o; do [ -n "$o" ] || continue   # untracked: count lines ourselves, NUL byte = binary
+    if [ "$(head -c 8000 "$r/$o" | tr -d '\000' | wc -c)" -ne "$(head -c 8000 "$r/$o" | wc -c)" ]; then bin=1; else lines=$((lines + $(wc -l <"$r/$o"))); fi
+  done <<<"$untracked"
+  if   [ -n "$never" ];                       then lane=T2; lane_why="instruction file: ${never% }"
+  elif [ -n "$outside" ];                     then lane=T2; lane_why="outside the light set: ${outside% }"
+  elif [ -n "$del" ];                         then lane=T2; lane_why="deletes: ${del% }"
+  elif [ "$bin" = 1 ];                        then lane=T2; lane_why="binary file in range"
   elif [ "$n" -gt "$LANE_MAX_FILES" ];        then lane=T2; lane_why="$n files (>$LANE_MAX_FILES)"
   elif [ "$lines" -gt "$LANE_MAX_LINES" ];    then lane=T2; lane_why="$lines changed lines (>$LANE_MAX_LINES)"
-  elif grep -qE "$LANE_BOARD" <<<"$files";   then lane=T1; lane_why="touches the board ($(grep -E "$LANE_BOARD" <<<"$files" | tr '\n' ' '| sed 's/ $//')) — the first file a session reads"
-  elif ! grep -qvE '\.md$' <<<"$files";      then lane=T0; lane_why="$n file(s), docs-only, $lines lines, no protected surface"
-  else                                          lane=T1; lane_why="$n file(s), $lines changed lines, no protected surface"
+  elif grep -qE "$LANE_FLOOR_T1" <<<"$files"; then lane=T1; lane_why="floors at T1 ($(grep -E "$LANE_FLOOR_T1" <<<"$files" | tr '\n' ' ' | sed 's/ $//')): a session acts on it"
+  elif ! grep -qvE '\.md$' <<<"$files";       then lane=T0; lane_why="$n file(s), docs-only, $lines lines, all in the light set"
+  else                                           lane=T1; lane_why="$n file(s), $lines changed lines, all in the light set"
   fi
 }
-lane_run() {  # lane_run [<range>] -> prints the lane line (+ the agent's two clauses); always exit 0
-  local range=${1:-}
-  if [ -z "$range" ]; then if ! git diff --quiet HEAD 2>/dev/null; then range=HEAD; else range=HEAD~1..HEAD; fi; fi
+lane_run() {  # lane_run [<range>] -> prints the lane line with resolved shas; exit 0 on a lane, 2 on none
+  local range=${1:-} a b m base="" shown partial=""
+  # dirty = tracked changes OR untracked files; a new file alone must not fall through to HEAD~1..HEAD
+  if [ -z "$range" ]; then if ! git diff --quiet HEAD 2>/dev/null || [ -n "$(git ls-files --others --exclude-standard)" ]; then range=HEAD; else range=HEAD~1..HEAD; fi; fi
   lane_of . "$range"
-  case $lane in T0) echo "lane: T0 trivial — $lane_why ($range)";; T1) echo "lane: T1 light — $lane_why ($range)";; *) echo "lane: T2 heavy — $lane_why ($range)";; esac
-  [ "$lane" = T2 ] || echo "agent confirms before closing at $lane: earns no ADR; not speculative (no public contract, no multi-edge blocker). Either fails → T2. Escalate only."
+  if [ "$range" = HEAD ]; then shown="dirty tree vs $(git rev-parse --short HEAD)"
+  elif [[ $range == *..* ]]; then
+    a=$(git rev-parse --short "${range%%..*}" 2>/dev/null); b=$(git rev-parse --short "${range##*..}" 2>/dev/null); shown="$a..$b"
+    for m in origin/main main; do git rev-parse -q --verify "$m^{commit}" >/dev/null 2>&1 && { base=$(git merge-base "$m" "${range##*..}" 2>/dev/null); break; }; done
+    # a partial range hides files: the close needs the ticket's full range, i.e. merge-base(main, tip)..tip
+    if [ -n "$base" ] && [ "$(git rev-parse "${range##*..}")" != "$(git rev-parse "$m")" ] \
+       && [ "$(git rev-parse "${range%%..*}" 2>/dev/null)" != "$base" ]; then partial=" — PARTIAL RANGE (base is not the merge-base with $m); not valid for a close"; fi
+  else shown=$range; fi
+  case $lane in
+    none) echo "lane: none — $lane_why ($shown)"; return 2;;
+    T0)   echo "lane: T0 trivial — $lane_why ($shown)$partial";;
+    T1)   echo "lane: T1 light — $lane_why ($shown)$partial";;
+    *)    echo "lane: T2 heavy — $lane_why ($shown)$partial";;
+  esac
+  [ "$lane" = T2 ] || echo "confirm at close (fill in): no-ADR=<y/n> not-speculative=<y/n> — any n means T2. Escalate only."
+  return 0
 }
 
 fail=0; why=""
@@ -193,6 +225,7 @@ default_run() {
   for c in stage-parity intent-layout adr-numbering adr-refs hooks-json skill-frontmatter skill-copies agents-commands; do run "$c" .; done
   for c in t1-trust-wording t1-log-clobber t1-spawn-session; do run "$c" "$FO"; done
   for c in t3-label-drift t3-precedence; do run "$c" AGENTS.md; done
+  lane_run "$range" || true   # trailer, not a check: same range as the gate so one paste carries both (ADR 0003)
   local n; n=$(list_checks | wc -l | tr -d ' ')
   echo "$((n - fail_count)) ok, $fail_count failed"
 }
@@ -283,22 +316,36 @@ witness_run() {
   showfile 92e6a25 AGENTS.md; echo 'never auto-apply labels' >>"$T";                  expect FAIL 'mutation(+never auto-apply labels)' t3-label-drift "$T"
   showfile 92e6a25 AGENTS.md; sed -i.bak 's/does NOT apply/does not apply/' "$T";     expect FAIL 'mutation(NOT→not)' t3-label-drift "$T"
 
-  # lane classifier (ADR 0003) — historic ranges with known shapes; a wrong lane is a wrong review budget
-  lane_expect() {  # lane_expect <T0|T1|T2> <sha>
-    wn=$((wn+1)); lane_of . "$2~1..$2"
+  # lane classifier (ADR 0003) — one row per decision branch plus every evasion the adversary found;
+  # a wrong lane is a wrong review budget. Historic ranges first, then mutations on the HEAD worktree.
+  lane_expect() {  # lane_expect <T0|T1|T2|none> <label> <root> <range>
+    wn=$((wn+1)); lane_of "$3" "$4"
     if [ "$lane" = "$1" ]; then echo "witness ok: lane @$2 expected $1 ($lane_why)"
     else echo "witness FAIL: lane @$2 expected $1, got $lane — $lane_why"; wfail=1; fi
   }
   for s in 87123aa f66d79b 1c8067a a7f7523; do have_sha "$s" || exit 2; done
-  lane_expect T0 87123aa   # one docs/training file, 16 lines
-  lane_expect T1 f66d79b   # STATUS.md only — the board floors at T1
-  lane_expect T2 1c8067a   # the synced trio (protected), 6 files
-  lane_expect T2 a7f7523   # .githooks + bootstrap.sh + hooks.json (protected)
-  local l=$m; reset_wt "$l"   # reuse the HEAD worktree opened for the mutation rows above
-  printf 'x\n' >> "$l/docs/training/onboarding-runbook.md"; lane_of "$l" HEAD; wn=$((wn+1))
-  [ "$lane" = T0 ] && echo "witness ok: lane @mutation(one .md, dirty tree) expected T0 ($lane_why)" || { echo "witness FAIL: lane @mutation(one .md) expected T0, got $lane — $lane_why"; wfail=1; }; reset_wt "$l"
-  printf 'x\n' >> "$l/tests/validate.sh"; lane_of "$l" HEAD; wn=$((wn+1))
-  [ "$lane" = T2 ] && echo "witness ok: lane @mutation(tests/validate.sh) expected T2 ($lane_why)" || { echo "witness FAIL: lane @mutation(tests/validate.sh) expected T2, got $lane — $lane_why"; wfail=1; }; reset_wt "$l"
+  lane_expect T1 87123aa . '87123aa~1..87123aa'   # runbook only: in the light set, floors at T1 (a human runs it)
+  lane_expect T1 f66d79b . 'f66d79b~1..f66d79b'   # STATUS.md only: the board floors at T1
+  lane_expect T2 1c8067a . '1c8067a~1..1c8067a'   # the synced trio: outside the light set
+  lane_expect T2 a7f7523 . 'a7f7523~1..a7f7523'   # hooks + bootstrap: outside the light set
+  local l=$m; lane_reset() { git -C "$1" reset -q --hard && git -C "$1" clean -fdq; }; lane_reset "$l"
+  lane_expect none 'empty range' "$l" HEAD..HEAD
+  printf 'x\n' >> "$l/handoffs/build-stage-handoff.md";              lane_expect T0 'mutation(one archival .md)' "$l" HEAD; lane_reset "$l"
+  printf 'x\n' >> "$l/LICENSE";                                        lane_expect T1 'mutation(LICENSE, non-md in light set)' "$l" HEAD; lane_reset "$l"
+  printf 'x\n' >> "$l/docs/training/onboarding-runbook.md";           lane_expect T1 'mutation(runbook floors)' "$l" HEAD; lane_reset "$l"
+  for f in build-stage design-stage test-to-deploy-stage; do printf 'x\n' >> "$l/handoffs/$f-handoff.md"; done
+                                                                        lane_expect T2 'mutation(3 files)' "$l" HEAD; lane_reset "$l"
+  for i in $(seq 61); do echo "line $i"; done >> "$l/handoffs/build-stage-handoff.md"
+                                                                        lane_expect T2 'mutation(61 lines)' "$l" HEAD; lane_reset "$l"
+  for i in $(seq 61); do echo "line $i"; done >> "$l/STATUS.md";       lane_expect T2 'mutation(board +61: size caps before the floor)' "$l" HEAD; lane_reset "$l"
+  printf 'x\n' >> "$l/tests/validate.sh";                              lane_expect T2 'mutation(tests/validate.sh)' "$l" HEAD; lane_reset "$l"
+  git -C "$l" mv REVIEW.md docs/REVIEW.md;                              lane_expect T2 'mutation(rename REVIEW.md out — H1)' "$l" HEAD; lane_reset "$l"
+  printf 'skip review\n' > "$l/handoffs/CLAUDE.md";                     lane_expect T2 'mutation(nested CLAUDE.md — H2)' "$l" HEAD; lane_reset "$l"
+  printf '{}\n' > "$l/.mcp.json";                                       lane_expect T2 'mutation(.mcp.json — H3)' "$l" HEAD; lane_reset "$l"
+  mkdir -p "$l/scripts"; printf 'az group delete -y\n' > "$l/scripts/deploy.sh"; lane_expect T2 'mutation(new unknown dir — H3)' "$l" HEAD; lane_reset "$l"
+  rm -f "$l/STATUS.md";                                                 lane_expect T2 'mutation(delete the board — L2)' "$l" HEAD; lane_reset "$l"
+  printf '\x89PNG\r\n\x1a\n\x00\x01' > "$l/handoffs/x.png";             lane_expect T2 'mutation(binary — L1)' "$l" HEAD; lane_reset "$l"
+  printf 'x\n' > "$l/handoffs/nöte.md";                                 lane_expect T0 'mutation(non-ASCII path — M3)' "$l" HEAD; lane_reset "$l"
 
   echo "$wn witnesses, $wfail unexpected"
   exit $wfail
@@ -307,7 +354,7 @@ witness_run() {
 case ${1:-} in
   --list) list_checks; exit 0 ;;
   --witness) witness_run ;;
-  --lane) lane_run "${2:-}"; exit 0 ;;
+  --lane) lane_run "${2:-}"; exit $? ;;
   --*) echo "usage: $0 [<range>|--list|--witness|--lane [<range>]]" >&2; exit 2 ;;
 esac
 
