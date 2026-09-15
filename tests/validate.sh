@@ -5,6 +5,7 @@
 #   tests/validate.sh [<range>]   run every check (sync-rule over <range>, else dirty tree, else HEAD~1..HEAD)
 #   tests/validate.sh --list      print check names, one per line
 #   tests/validate.sh --witness   run every fail-first witness (needs full history)
+#   tests/validate.sh --lane [<range>]  classify the diff's review lane (T0/T1/T2) from what git sees (ADR 0003)
 #
 # Requires: bash, git, grep/awk, python3 (stdlib). Offline. Never mutates the
 # working tree — witness copies are `git worktree add` under $TMPDIR, trap-removed.
@@ -17,6 +18,36 @@ FO=plugin/skills/factory-orchestrator/SKILL.md
 DOC=docs/engineering-workflow.md
 SK=plugin/skills/engineering-workflow/SKILL.md
 CHECKS="sync-rule stage-parity intent-layout adr-numbering adr-refs hooks-json skill-frontmatter skill-copies agents-commands t1-trust-wording t1-log-clobber t1-spawn-session t3-label-drift t3-precedence"
+
+# ---------- lane classifier (Deploy: review effort follows the lane; ADR 0003) ----------
+# A classifier, not a check: it prints one `lane:` line to paste beside the gate run and never fails.
+# It sees files, not meaning — the agent still confirms "earns no ADR" and "not speculative", and may
+# only ESCALATE the printed lane. Consumers extend LANE_PROTECTED with their own suite surfaces
+# (src/, infrastructure/, security paths); LANE_BOARD is the file a fresh session reads first.
+LANE_PROTECTED='^(tests/|\.githooks/|\.github/|plugin/|\.agents/|\.claude/|\.claude-plugin/|\.pi/|\.gitignore$|\.gitattributes$|docs/adr/|docs/agents/|intent/|AGENTS\.md$|CLAUDE\.md$|CONTRIBUTING\.md$|REVIEW\.md$|CONTEXT\.md$|SYSTEM-INTENT\.md$|README\.md$|docs/engineering-workflow\.md$|bootstrap\.sh$|skills-lock\.json$)'
+LANE_BOARD='^STATUS\.md$'
+LANE_MAX_FILES=2; LANE_MAX_LINES=60
+lane_of() {  # lane_of <root> <range> -> sets lane (T0|T1|T2) and lane_why; rc 2 only if git diff fails
+  local r=$1 range=$2 files n prot lines
+  files=$(git -C "$r" diff --name-only "$range" 2>/dev/null) || { lane=T2; lane_why="git diff $range failed — heavy by default"; return 2; }
+  [ -n "$files" ] && { n=$(grep -c . <<<"$files"); } || { lane=T0; lane_why="empty range"; return 0; }
+  prot=$(grep -E "$LANE_PROTECTED" <<<"$files" | tr '\n' ' ')
+  lines=$(git -C "$r" diff --numstat "$range" | awk '{a+=$1; d+=$2} END{print a+d+0}')
+  if   [ -n "$prot" ];                       then lane=T2; lane_why="protected surface: ${prot% }"
+  elif [ "$n" -gt "$LANE_MAX_FILES" ];        then lane=T2; lane_why="$n files (>$LANE_MAX_FILES)"
+  elif [ "$lines" -gt "$LANE_MAX_LINES" ];    then lane=T2; lane_why="$lines changed lines (>$LANE_MAX_LINES)"
+  elif grep -qE "$LANE_BOARD" <<<"$files";   then lane=T1; lane_why="touches the board ($(grep -E "$LANE_BOARD" <<<"$files" | tr '\n' ' '| sed 's/ $//')) — the first file a session reads"
+  elif ! grep -qvE '\.md$' <<<"$files";      then lane=T0; lane_why="$n file(s), docs-only, $lines lines, no protected surface"
+  else                                          lane=T1; lane_why="$n file(s), $lines changed lines, no protected surface"
+  fi
+}
+lane_run() {  # lane_run [<range>] -> prints the lane line (+ the agent's two clauses); always exit 0
+  local range=${1:-}
+  if [ -z "$range" ]; then if ! git diff --quiet HEAD 2>/dev/null; then range=HEAD; else range=HEAD~1..HEAD; fi; fi
+  lane_of . "$range"
+  case $lane in T0) echo "lane: T0 trivial — $lane_why ($range)";; T1) echo "lane: T1 light — $lane_why ($range)";; *) echo "lane: T2 heavy — $lane_why ($range)";; esac
+  [ "$lane" = T2 ] || echo "agent confirms before closing at $lane: earns no ADR; not speculative (no public contract, no multi-edge blocker). Either fails → T2. Escalate only."
+}
 
 fail=0; why=""
 list_checks() { printf '%s\n' $CHECKS; }
@@ -252,6 +283,23 @@ witness_run() {
   showfile 92e6a25 AGENTS.md; echo 'never auto-apply labels' >>"$T";                  expect FAIL 'mutation(+never auto-apply labels)' t3-label-drift "$T"
   showfile 92e6a25 AGENTS.md; sed -i.bak 's/does NOT apply/does not apply/' "$T";     expect FAIL 'mutation(NOT→not)' t3-label-drift "$T"
 
+  # lane classifier (ADR 0003) — historic ranges with known shapes; a wrong lane is a wrong review budget
+  lane_expect() {  # lane_expect <T0|T1|T2> <sha>
+    wn=$((wn+1)); lane_of . "$2~1..$2"
+    if [ "$lane" = "$1" ]; then echo "witness ok: lane @$2 expected $1 ($lane_why)"
+    else echo "witness FAIL: lane @$2 expected $1, got $lane — $lane_why"; wfail=1; fi
+  }
+  for s in 87123aa f66d79b 1c8067a a7f7523; do have_sha "$s" || exit 2; done
+  lane_expect T0 87123aa   # one docs/training file, 16 lines
+  lane_expect T1 f66d79b   # STATUS.md only — the board floors at T1
+  lane_expect T2 1c8067a   # the synced trio (protected), 6 files
+  lane_expect T2 a7f7523   # .githooks + bootstrap.sh + hooks.json (protected)
+  local l=$m; reset_wt "$l"   # reuse the HEAD worktree opened for the mutation rows above
+  printf 'x\n' >> "$l/docs/training/onboarding-runbook.md"; lane_of "$l" HEAD; wn=$((wn+1))
+  [ "$lane" = T0 ] && echo "witness ok: lane @mutation(one .md, dirty tree) expected T0 ($lane_why)" || { echo "witness FAIL: lane @mutation(one .md) expected T0, got $lane — $lane_why"; wfail=1; }; reset_wt "$l"
+  printf 'x\n' >> "$l/tests/validate.sh"; lane_of "$l" HEAD; wn=$((wn+1))
+  [ "$lane" = T2 ] && echo "witness ok: lane @mutation(tests/validate.sh) expected T2 ($lane_why)" || { echo "witness FAIL: lane @mutation(tests/validate.sh) expected T2, got $lane — $lane_why"; wfail=1; }; reset_wt "$l"
+
   echo "$wn witnesses, $wfail unexpected"
   exit $wfail
 }
@@ -259,7 +307,8 @@ witness_run() {
 case ${1:-} in
   --list) list_checks; exit 0 ;;
   --witness) witness_run ;;
-  --*) echo "usage: $0 [<range>|--list|--witness]" >&2; exit 2 ;;
+  --lane) lane_run "${2:-}"; exit 0 ;;
+  --*) echo "usage: $0 [<range>|--list|--witness|--lane [<range>]]" >&2; exit 2 ;;
 esac
 
 default_run "${1:-}"

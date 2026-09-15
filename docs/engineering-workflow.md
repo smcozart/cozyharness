@@ -143,20 +143,29 @@ proportionate for a multi-ticket, protected-surface build; it is dead weight
 for a one-file doc tweak. The light lane is a **defined** thinner front end for
 small, low-risk work — the *same* tail (proof + human gate), a tapered head.
 
-**When the light lane applies — every line must hold:**
+**The lane is computed, then confirmed** (ADR 0003). Most of what decides a
+lane is visible to git — how many files, which paths, how many lines — so
+`tests/validate.sh --lane <range>` classifies the diff and prints one
+`lane:` line that is pasted beside the gate run at close. The lane sets the
+**review effort the diff owes** (Deploy §1):
 
-- single-file or two-file change;
-- docs-only, or a non-speculative internal change;
-- touches no suite surface (`tests/validate.sh` or any path a check guards);
-- touches no synced trio (`docs/engineering-workflow.md`, the two
-  engineering-workflow `SKILL.md` copies, `README.md`);
-- touches no AGENTS.md / CONTRIBUTING.md / security or trust boundary /
-  irreversible op;
-- changes no public contract (schema, API, the label vocabulary);
-- earns no ADR (no hard-to-reverse, surprising, or real-trade-off decision);
-- carries no multi-edge blocker — not part of a multi-ticket effort.
+| Lane | Computed trigger | Review owed |
+|---|---|---|
+| **T0 trivial** | ≤2 files, all `*.md`, ≤60 lines, none on a protected surface or the board | the gate run. No adversary pass — the gate is the review. |
+| **T1 light** | ≤2 files, ≤60 changed lines, no protected surface — or **any** touch of the board (`STATUS.md`), whatever else holds | the gate run + one **bounded** adversary pass: correctness of the diff's claims only, findings MED and above, no scope sweep |
+| **T2 heavy** | any protected surface — `tests/`, hooks, the synced trio, `AGENTS.md` / `CONTRIBUTING.md` / `REVIEW.md` / `CONTEXT.md` / `SYSTEM-INTENT.md`, `docs/adr/`, `docs/agents/`, `intent/`, `plugin/`, skill copies, `bootstrap.sh`, `skills-lock.json` — or >2 files, or >60 lines | the full review loop: `REVIEW.md` axes + the unbounded adversary pass |
 
-Fail any one line → heavy lane. When in doubt, heavy lane.
+The classifier sees files, not meaning. Two clauses therefore stay with the
+agent and are stated in the close beside the `lane:` line: **earns no ADR**
+(no hard-to-reverse, surprising, or real-trade-off decision) and **not
+speculative** (no public contract — schema, API, label vocabulary — and no
+multi-edge blocker). Either fails → T2. **Escalation is the only direction:**
+an agent may raise a computed lane and never lower it; when in doubt, heavy
+lane. Consumers extend the protected set in their own `validate.sh` with the
+surfaces their checks guard (`src/`, infrastructure, security paths) — a
+consumer whose protected set is empty has not adopted the lane.
+
+The light lane below is **T0 and T1**; the heavy lane is **T2**.
 
 **Light-lane shape (thinner head, identical tail):**
 
@@ -170,18 +179,22 @@ Fail any one line → heavy lane. When in doubt, heavy lane.
 
 **It is a lane, not a loophole.** Nothing about the close gate relaxes.
 `ready-for-agent`, pasted proof, and the human gate are identical on both
-lanes — *only the front artifact tapers*. There is no auto-approval, no agent
-"judgement" that watches a small change self-approve, and no rule that a
-change "must always" carry a `plan.md`. The heavy lane stays mandatory for
-anything touching a protected surface or a multi-ticket effort.
+lanes — *only the front artifact and the review budget taper*. There is no
+auto-approval; the only agent judgement in play is the two stated clauses,
+and it can only escalate. No rule says a change "must always" carry a
+`plan.md`. The heavy lane stays mandatory for anything touching a protected
+surface or a multi-ticket effort, and the classifier makes that mechanical.
 
 **Light vs heavy, worked.** Fixing a typo in
-`docs/training/onboarding-runbook.md` is light lane: one file, docs-only, no
-protected surface — a two-line `intent.md`, then the same
-green-suite-plus-checkoff close. Adding the light lane itself (this change) is
-heavy lane: it edits the synced trio, a suite-checked surface, so it owes the
-sync rule (three files, one commit) and merge-path branch-protection proof —
-the protected surface, not the size, forces the lane.
+`docs/training/onboarding-runbook.md` is **T0**: one file, docs-only, no
+protected surface — `--lane` says so, a two-line `intent.md`, the gate run,
+close; no adversary pass. Refreshing the board is **T1**: `STATUS.md` is the
+first file a session reads, so it owes one bounded pass even at one file.
+Adding the light lane itself (#24), or this tiering (ADR 0003), is **T2**: it
+edits the synced trio and `tests/validate.sh`, suite-checked surfaces, so it
+owes the sync rule (three files, one commit), the full adversary pass and
+merge-path branch-protection proof — the protected surface, not the size,
+forces the lane.
 
 ## Build — agents execute against the tracker
 
@@ -263,8 +276,11 @@ Deploy is what a diff owes before it merges — the same checklist at either
 seam: this repo's ticket close, or a consumer's PR.
 
 1. **The review loop.** Every diff is reviewed against
-   [`REVIEW.md`](../REVIEW.md): the `code-review` skill's two axes plus a
-   mandatory `adversary` pass on agent-produced diffs. Findings are tagged by
+   [`REVIEW.md`](../REVIEW.md): the `code-review` skill's two axes plus an
+   `adversary` pass on agent-produced diffs **sized to the computed lane**
+   (Light lane table; ADR 0003) — unbounded at T2, bounded to the diff's
+   claims and MED+ findings at T1, none at T0 where the gate is the review.
+   Findings are tagged by
    risk class (Bugs / Security / Compliance) regardless of which pass
    surfaced them; a finding is resolved by a fix commit or an explicit
    carried-forward note in the tracker with an owner other than the author,
@@ -272,8 +288,9 @@ seam: this repo's ticket close, or a consumer's PR.
    review thread (closing comment or PR) is the audit record.
 2. **The merge gate.** A close pastes, beside the Test gate's evidence:
    (a) review findings resolved or carried with an owner; (b) the pasted
-   `tests/validate.sh [<range>]` run (Test §1); (c) the adversary verdict on
-   the diff; (d) a human checkoff for flagged-risk classes (table below);
+   `tests/validate.sh [<range>]` run (Test §1); (c) the `--lane` line and
+   the adversary verdict it owes (T0 pastes the lane line and `adversary:
+   n/a — T0`); (d) a human checkoff for flagged-risk classes (table below);
    (e) UI tickets only: preview proof pasted — screenshot, recording, or
    standing link (consumer obligation; this repo has no UI surface);
    (f) branch-protection proof for tickets touching the merge path, others

@@ -33,6 +33,7 @@ The standard process (planning → tickets → triage → implement → review �
 
 - `tests/validate.sh [<range>]` — the Test gate. Healthy shape: one `ok: <name>` line per check below, then `N ok, 0 failed`, exit 0. Pass the ticket's range at close (e.g. `origin/main..HEAD`). Paste the run in the closing comment.
 - `tests/validate.sh --witness` — replays every check's fail-first witness; exit 0 only if every bad sha / mutation fails and every good sha passes.
+- `tests/validate.sh --lane [<range>]` — classifies the diff's review lane (T0 trivial / T1 light / T2 heavy) from files, paths and line count (ADR 0003). A classifier, not a check: always exit 0, not a check name. Paste its line beside the gate run at close; escalate, never lower.
 - `tests/validate.sh --list` — prints the check names, which must equal this list (verified by the agents-commands check):
   - static: `sync-rule`, `stage-parity`, `intent-layout`, `adr-numbering`, `adr-refs`, `hooks-json`, `skill-frontmatter`, `skill-copies`, `agents-commands`
   - regression (#8 corpus): `t1-trust-wording`, `t1-log-clobber`, `t1-spawn-session`, `t3-label-drift`, `t3-precedence`

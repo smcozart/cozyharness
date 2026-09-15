@@ -86,23 +86,31 @@ always-kept per-session plan-before-code.
 
 ## Light lane — thin front end, same tail
 
-A small, low-risk change takes a thinner front end. It applies only when
-**every** line holds: single-file or two-file; docs-only or a non-speculative
-internal change; touches no suite surface (`tests/validate.sh` or any
-check-guarded path); touches no synced trio (`docs/engineering-workflow.md`,
-the two engineering-workflow `SKILL.md` copies, `README.md`); touches no
-AGENTS.md / CONTRIBUTING.md / security or trust boundary / irreversible op;
-changes no public contract (schema, API, label vocabulary); earns no ADR;
-carries no multi-edge blocker. Fail any one line → heavy lane.
+A small, low-risk change takes a thinner front end and a smaller review
+budget. **The lane is computed, then confirmed** (ADR 0003): run
+`tests/validate.sh --lane <range>` and paste its `lane:` line beside the
+gate run. **T0 trivial** — ≤2 files, all `*.md`, ≤60 lines, no protected
+surface or board: the gate run is the review, no adversary pass. **T1
+light** — ≤2 files, ≤60 lines, no protected surface, or any touch of
+`STATUS.md`: the gate run + one bounded adversary pass (the diff's claims,
+MED+ findings only). **T2 heavy** — any protected surface (`tests/`, hooks,
+the synced trio, AGENTS/CONTRIBUTING/REVIEW/CONTEXT/SYSTEM-INTENT,
+`docs/adr/`, `docs/agents/`, `intent/`, `plugin/`, skill copies,
+`bootstrap.sh`, `skills-lock.json`), >2 files or >60 lines: the full
+review loop. The classifier sees files, not meaning, so the agent states two
+clauses at close — **earns no ADR**, **not speculative** (no public contract,
+no multi-edge blocker) — and either failing means T2. Escalate only; never
+lower a computed lane. Consumers extend the protected set with their own
+guarded surfaces.
 
 Shape: a short `intent/<n>-<slug>/intent.md` only — problem, one-line outcome,
 scope, acceptance — with **no** `spec.md` and **no** `plan.md`. The tail is
 identical to every close: the same `ready-for-agent` contract, the same pasted
 `tests/validate.sh [<range>]` proof, the same human checkoff. It is a defined
 lane, **not** a loophole — nothing about the close gate relaxes, there is no
-auto-approval and no agent judgement, and the heavy lane stays mandatory for
-any protected surface or multi-ticket effort. (Full detail:
-`docs/engineering-workflow.md`.)
+auto-approval, the only agent judgement is escalation, and the heavy lane
+stays mandatory for any protected surface or multi-ticket effort. (Full
+detail: `docs/engineering-workflow.md`.)
 
 ## Build — agents execute against the tracker
 
@@ -141,11 +149,12 @@ adversarial pass.
 
 ## Deploy — gated
 
-Every diff is reviewed per `REVIEW.md` (code-review two axes + mandatory
-adversary pass on agent-produced diffs; findings tagged by risk class,
-resolved or carried with an owner — never by silence). The merge gate pastes:
-review resolution, `tests/validate.sh [<range>]` (Test §1), the adversary
-verdict, a human checkoff for flagged-risk classes (suite-checked surfaces,
+Every diff is reviewed per `REVIEW.md` (code-review two axes + an adversary
+pass on agent-produced diffs sized to the computed lane — unbounded at T2,
+bounded at T1, none at T0; findings tagged by risk class, resolved or carried
+with an owner — never by silence). The merge gate pastes: review resolution,
+`tests/validate.sh [<range>]` (Test §1), the `--lane` line and the adversary
+verdict it owes, a human checkoff for flagged-risk classes (suite-checked surfaces,
 enumerated in the Deploy section of the canonical doc, CONTRIBUTING.md,
 `docs/agents/`, security/trust boundaries, irreversible ops), preview proof
 for UI tickets, and branch-protection proof for merge-path tickets. Branch

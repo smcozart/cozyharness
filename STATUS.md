@@ -26,6 +26,9 @@ Milestone tag: `v1-harness-complete`.
 
 ## Queued next
 
+- **Review effort follows a computed lane** (ADR 0003; branch `claude-harness`, not on `main`) —
+  `tests/validate.sh --lane`, T0/T1/T2 review budgets, trio + REVIEW.md + AGENTS.md synced. Awaiting the
+  issue number (Sean files) and his checkoff; raised from the arti-agent-platform 2026-09-15 retro.
 - **Claude-host pipeline pilot** — one real ticket through the full pipeline,
   Claude Code as orchestrator + worker (the agreed next intake).
 - Future (when the operator cuts them): **pi event-advisor** (under #1),
