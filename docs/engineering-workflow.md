@@ -152,7 +152,7 @@ lane is visible to git — how many files, which paths, how many lines — so
 | Lane | Computed trigger | Review owed |
 |---|---|---|
 | **T0 trivial** | ≤2 files, all `*.md`, ≤60 lines, every file in the **light set** and none on the T1 floor | the gate run + the human checkoff. No adversary pass. (On this repo only the archival `handoffs/*.md` qualify.) |
-| **T1 light** | ≤2 files, ≤60 changed lines, every file in the light set — or any file on the **T1 floor**: the board `STATUS.md`, `docs/training/` (a human runs it), `handoffs/README.md`, `handoffs/pickup-handoff.md` | the gate run + one **bounded** adversary pass: correctness of the diff's claims only, findings MED and above, no scope sweep |
+| **T1 light** | ≤2 files, ≤60 changed lines, every file in the light set — or any file on the **T1 floor**: the board `STATUS.md`, `docs/training/` (a human runs it), `handoffs/pickup-handoff.md` (a session's entrance ramp) | the gate run + one **bounded** adversary pass: correctness of the diff's claims only, findings MED and above, no scope sweep |
 | **T2 heavy** | **everything else** — any file outside the light set (the light set here is `handoffs/`, `docs/training/`, `STATUS.md`, `LICENSE`; every other path, including ones the repo has not grown yet, is heavy), any instruction file wherever it sits (`CLAUDE.md`, `AGENTS.md`, `README.md`, `.mcp.json`, `.cursorrules`, `.gitmodules`), any delete, any binary, >2 files, or >60 lines | the full review loop: `REVIEW.md` axes + the unbounded adversary pass |
 
 The classifier is an **allow-list**: unknown is heavy, which is what "when in

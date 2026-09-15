@@ -94,7 +94,7 @@ unknown is heavy. **T0 trivial** — ≤2 files, all `*.md`, ≤60 lines, every
 file in the light set (`handoffs/`, `docs/training/`, `STATUS.md`, `LICENSE`
 here) and none on the T1 floor: the gate run + the human checkoff, no
 adversary pass. **T1 light** — same limits, or any file on the T1 floor
-(`STATUS.md`, `docs/training/`, `handoffs/README.md`, `handoffs/pickup-handoff.md`):
+(`STATUS.md`, `docs/training/`, `handoffs/pickup-handoff.md`):
 the gate run + one bounded adversary pass (the diff's claims, MED+ findings
 only). **T2 heavy** — anything outside the light set, any instruction file
 wherever it sits (`CLAUDE.md`, `AGENTS.md`, `README.md`, `.mcp.json`,

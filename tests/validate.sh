@@ -28,7 +28,7 @@ CHECKS="sync-rule stage-parity intent-layout adr-numbering adr-refs hooks-json s
 # "earns no ADR" and "not speculative", and may only ESCALATE the printed lane.
 # Consumers extend LANE_LIGHT (safe by omission) and LANE_FLOOR_T1 (light files a session acts on).
 LANE_LIGHT='^(handoffs/|docs/training/|STATUS\.md$|LICENSE$)'
-LANE_FLOOR_T1='^(STATUS\.md$|docs/training/|handoffs/(README|pickup-handoff)\.md$)'
+LANE_FLOOR_T1='^(STATUS\.md$|docs/training/|handoffs/pickup-handoff\.md$)'   # README.md anywhere is LANE_NEVER (T2), never a floor entry
 LANE_NEVER='(^|/)(CLAUDE|AGENTS|GEMINI|COPILOT|README)\.md$|(^|/)\.(cursorrules|mcp\.json|gitmodules)$'
 LANE_MAX_FILES=2; LANE_MAX_LINES=60
 lane_of() {  # lane_of <root> <range> -> sets lane (T0|T1|T2|none) and lane_why; rc 2 when there is no lane
