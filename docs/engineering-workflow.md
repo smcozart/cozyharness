@@ -131,9 +131,11 @@ that moves work toward `ready-for-agent`.
    or authority rule becomes a new `docs/adr/NNNN-slug.md`; a requirement or
    design detail becomes an edit to the spec's matching section; a detail
    scoped to one ticket becomes an edit to that issue's body. Settling it in
-   conversation is its approval — no separate sign-off. (Where these edits
-   are committed and pushed from is mechanics for a later skill, not this
-   doc.)
+   conversation is its approval — no separate sign-off beyond item 6's
+   high-risk carve-out. Written on a records branch/PR the session opens
+   itself; reply in one line naming the record. "Captured in this
+   conversation only" and "finish mapping first, then update once" are not
+   moves; batch only when asked.
 8. **What Build reads, in order** (forward contract to the next stage): (1)
    `gh issue view <n> --comments` (the ticket, a child issue per ADR 0002),
    (2) follow the ticket body's spec-path reference (or its parent's

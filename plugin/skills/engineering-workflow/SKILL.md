@@ -89,7 +89,10 @@ always-kept per-session plan-before-code.
    authority rule becomes a new ADR; a requirement or design detail becomes
    an edit to the spec's matching section; a detail scoped to one ticket
    becomes an edit to that issue's body. Settling it in conversation is its
-   approval — no separate sign-off.
+   approval — no separate sign-off beyond item 4's high-risk carve-out.
+   Written on a records branch/PR the session opens itself; reply in one
+   line naming the record. "Captured in this conversation only" and "finish
+   mapping first, then update once" are not moves; batch only when asked.
 6. **Build read order**: issue → spec → ADRs → `CONTEXT.md` → code.
    Greenfield and brownfield run the same workflow; only the seed differs
    (brief/PRD vs diagnosis/retro).
