@@ -135,7 +135,8 @@ that moves work toward `ready-for-agent`.
    high-risk carve-out. Written on a records branch/PR the session opens
    itself; reply in one line naming the record. "Captured in this
    conversation only" and "finish mapping first, then update once" are not
-   moves; batch only when asked.
+   moves; batch only when asked. The `intent-conversation` skill carries the
+   mechanics (records branch/PR, one-line reply).
 8. **What Build reads, in order** (forward contract to the next stage): (1)
    `gh issue view <n> --comments` (the ticket, a child issue per ADR 0002),
    (2) follow the ticket body's spec-path reference (or its parent's

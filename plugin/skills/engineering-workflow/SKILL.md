@@ -93,6 +93,8 @@ always-kept per-session plan-before-code.
    Written on a records branch/PR the session opens itself; reply in one
    line naming the record. "Captured in this conversation only" and "finish
    mapping first, then update once" are not moves; batch only when asked.
+   The `intent-conversation` skill carries the mechanics (records
+   branch/PR, one-line reply).
 6. **Build read order**: issue → spec → ADRs → `CONTEXT.md` → code.
    Greenfield and brownfield run the same workflow; only the seed differs
    (brief/PRD vs diagnosis/retro).
