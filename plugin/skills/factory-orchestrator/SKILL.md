@@ -1,6 +1,6 @@
 ---
 name: factory-orchestrator
-description: Orchestrate a multi-agent build via herdr worker sessions. Use when continuing a tracked build, dispatching tickets to worker sessions, supervising parallel agents, or when asked "where are we" on the build.
+description: Orchestrate a multi-agent build via herdr worker sessions. Use when continuing a tracked build, dispatching tickets to worker sessions via herdr panes across a factory build (for a single repo's own session, use `dispatch`), supervising parallel agents, or when asked "where are we" on the build.
 ---
 
 # Factory Orchestrator
@@ -8,7 +8,10 @@ description: Orchestrate a multi-agent build via herdr worker sessions. Use when
 You orchestrate the factory build: you manage worker sessions, you do not write
 factory code yourself. Read `.factory/design.md` for the system being built. This
 skill is the full instruction set; `.factory/supervision.md` is only a pointer back
-here. The live frontier is GitHub — nothing in a file outranks it.
+here. The live frontier is GitHub — nothing in a file outranks it. This is the herdr
+layer, spawning worker panes across a whole factory build; the `dispatch` skill
+(ADR-006 child 3) is the in-conversation layer for a single repo's own session — both
+stay.
 
 ## The build
 
