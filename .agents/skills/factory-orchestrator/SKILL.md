@@ -1,6 +1,6 @@
 ---
 name: factory-orchestrator
-description: Orchestrate a multi-agent build via herdr worker sessions. Use when continuing a tracked build, dispatching tickets to worker sessions, supervising parallel agents, or when asked "where are we" on the build.
+description: Orchestrate a multi-agent build via herdr worker sessions. Use when continuing a tracked build, dispatching tickets to worker sessions via herdr panes across a factory build (for a single repo's own session, use `dispatch`), supervising parallel agents, or when asked "where are we" on the build.
 ---
 
 # Factory Orchestrator
