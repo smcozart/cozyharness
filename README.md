@@ -22,9 +22,10 @@ in hours, and **humans stay above the loop: instigating, directing, governing.**
 ```
 Plan ────► issue-first intake, then intent: the why (outcome, scope,
           non-goals) at intent/<issue-number>-<slug>/intent.md,
-          aligned with SYSTEM-INTENT.md — human-approved
+          aligned with SYSTEM-INTENT.md — human-approved; intake never waits
 Design ──► spec.md beside the intent; ADRs over the bar; vertical-slice
-          tickets as child issues with blocking edges; approval gate
+          tickets as child issues with blocking edges; approval gate;
+          decisions are records in the same turn
 Build ───► one ticket per agent session; workers cite ADRs, write ADRs
           (optional plan.md sequences tickets for multi-ticket builds — not
           the agent's per-session plan-before-code)

@@ -35,7 +35,11 @@ Formalized in issue [#2](https://github.com/smcozart/cozyharness/issues/2).
 2. **One request, one issue.** A conversation containing multiple requests is
    split into separate issues (GitHub sub-issues or `Blocked by:` edges when
    they depend on each other); each gets its own intent and lifecycle. Mixing
-   concerns in one issue hides scope from triage and review.
+   concerns in one issue hides scope from triage and review. Intake never
+   waits: a request is filed the moment it is said, even mid-build; a
+   dependent request is filed as its own issue with a blocking edge to the
+   one ahead of it (mechanics: `docs/agents/issue-tracker.md`), never held
+   for later batching.
 3. **Work-item intent.** After triage clarification, capture the agreed why in
    `intent/<issue-number>-<slug>/intent.md` (start from
    [`intent/TEMPLATE.md`](../intent/TEMPLATE.md)). The issue number is the join
@@ -120,14 +124,26 @@ that moves work toward `ready-for-agent`.
    passed. A ticket then earns `ready-for-agent` on the standard two
    conditions — blockers resolved + acceptance criteria defined. No label,
    no work.
-7. **What Build reads, in order** (forward contract to the next stage): (1)
+7. **A settled decision becomes a record in the same turn** (ADR 0004). When
+   the developer settles something in conversation — "let's go with X",
+   "lock that in", "we decided" — it lands in its durable home before the
+   next question, never held in chat for later batching: a hard-to-reverse
+   or authority rule becomes a new `docs/adr/NNNN-slug.md`; a requirement or
+   design detail becomes an edit to the spec's matching section; a detail
+   scoped to one ticket becomes an edit to that issue's body. Settling it in
+   conversation is its approval — no separate sign-off beyond item 6's
+   high-risk carve-out. Written on a records branch/PR the session opens
+   itself; reply in one line naming the record. "Captured in this
+   conversation only" and "finish mapping first, then update once" are not
+   moves; batch only when asked.
+8. **What Build reads, in order** (forward contract to the next stage): (1)
    `gh issue view <n> --comments` (the ticket, a child issue per ADR 0002),
    (2) follow the ticket body's spec-path reference (or its parent's
    `intent/<parent-n>-<slug>/`) to the spec; then the `intent.md` for the
    why, (3) every ADR touching the area, (4) root
    `CONTEXT.md`, (5) only then the code. A ticket whose spec or links are
    missing is bounced back to Design, not improvised around.
-8. **Greenfield vs brownfield — one workflow, different seeds.** Same
+9. **Greenfield vs brownfield — one workflow, different seeds.** Same
    pipeline, same artifacts, same gates. Greenfield seeds the spec from the
    brief or PRD against SYSTEM-INTENT.md, and its design concerns are mostly
    new seams; brownfield seeds it from the diagnosis, retro finding, or
