@@ -14,9 +14,9 @@ description: >
   "done for today", "wrapping up", "let's stop here", "hand off".
 ---
 
-**Companion skill:** `dispatch` lands with ADR-006 child 3 — automatic one-worker-per-ticket
-dispatch from `ready-for-agent` issues; until then it stays in the consuming plugin's own layer,
-cross-referenced here by name only, never a path.
+**Companion skill:** `dispatch` ships alongside this skill (ADR-006 child 3) — automatic
+one-worker-per-ticket dispatch from `ready-for-agent` issues, cross-referenced here by name only,
+never a path.
 
 # The intent conversation
 
