@@ -6,4 +6,5 @@ __pycache__/
 .agents/skills/*
 !.agents/skills/ponytail/
 !.agents/skills/factory-orchestrator/
+!.agents/skills/operator-checkpoint/
 .factory/
