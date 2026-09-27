@@ -135,6 +135,7 @@ CHANGED since <anchor>
 LIVE
    issues  #<n> <short> · #<n> ↑ · #<n> needs-triage
    PRs     #<n> <branch> → <base>  <awaiting human merge | awaiting review>
+   branches <n> ahead of main, reducible to <branch> +<m> (<chain>, PR #<k>)
    board   <one informational board line, or nothing when clean>
 
 NEXT
@@ -153,6 +154,12 @@ Rules:
   `mergeCommit.oid`, `direct push`, or the words `proof missing ↑`.
 - **No colour, no emoji** — plain text plus `↑`, so every host renders it the
   same.
+- **The LIVE `branches` line always prints** even when every branch is
+  suppressed by the action rules (open-PR head, or contained in another ahead
+  branch) — the off-main landscape is what the operator watches for growth:
+  `<n> ahead of main, reducible to <branch> +<m> (<chain>, PR #<k>)`. Live
+  case: `5 ahead of main, reducible to claude-harness +9 (contained in
+  t85-dispatch, PR #30; t31 is PR #32's head)`.
 - Cut reassurances that ask for no action ("board accurate elsewhere") and
   repeated explanation of why an item is owned by the human — the owner field
   is enough.

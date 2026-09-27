@@ -96,7 +96,9 @@ full exactly once and elsewhere as `#<n> ↑`; empty states print `none …
 of its own — it folds into NEEDS YOU (action owed), LIVE (one informational
 board line), or nothing when clean. Branches ahead of main report only when
 an action is owed: suppress a branch that is an open PR's head or that
-another ahead branch contains (`git merge-base --is-ancestor`). Plain text
+another ahead branch contains (`git merge-base --is-ancestor`). The LIVE
+`branches` line always prints — even when every branch is suppressed — so the
+operator can watch the off-main landscape for indefinite growth. Plain text
 plus `↑` only — no colour, no emoji. The next action is a recommendation; the
 skill performs no action.
 
