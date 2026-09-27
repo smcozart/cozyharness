@@ -122,8 +122,8 @@ italics and a leading `-` becomes a list item.
 ```
 ── OPERATOR CHECKPOINT ───────────────────────────────────────────
    run <today> · since <anchor> <anchor-ISO> (<source>)
-   needs you <n> · blocked <n> · changed <c> commit(s), <p> PR(s), <i> issue(s)
-   live <n> issue(s), <p> PR(s)
+   needs you <n> · blocked <n> · changed <c> commits, <p> PRs, <i> issues
+   live <n> issues, <p> PRs
 
 ── NEEDS YOU (<n>) ───────────────────────────────────────────────
 
@@ -142,8 +142,9 @@ italics and a leading `-` becomes a list item.
 ── CHANGED since <anchor> ────────────────────────────────────────
 
     <sha>    <subject>
-             proof: <direct push to main | mergeCommit.oid>
-    #<n>     <title>          proof missing ↑
+             proof: <direct push | mergeCommit.oid>
+    #<n>     <title>
+             proof missing ↑
     PRs merged to main: none (valid)
 
 ── LIVE ──────────────────────────────────────────────────────────
