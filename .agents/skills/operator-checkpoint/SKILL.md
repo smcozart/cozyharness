@@ -122,8 +122,8 @@ italics and a leading `-` becomes a list item.
 ```
 ── OPERATOR CHECKPOINT ───────────────────────────────────────────
    run <today> · since <anchor> <anchor-ISO> (<source>)
-   needs you <n> · blocked <n> · changed <c> commits, <p> PRs, <i> issues
-   live <n> issues, <p> PRs
+   needs you <n> · blocked <n>
+   changed <c> commits, <p> PRs, <i> issues · live <n> issues, <p> PRs
 
 ── NEEDS YOU (<n>) ───────────────────────────────────────────────
 
