@@ -38,22 +38,33 @@ dumps.
 **DRIFT** — reconcile STATUS.md's rows (open frontier, queued next, carried
 findings) against the live tracker; every difference is reported:
 - `gh issue list --state open --json number,title,labels`
-- `gh pr list --state merged --search "merged:>=$date" --json number,title,mergeCommit,closedAt`
+- `gh pr list --state merged --search "merged:>=$date" --base main --json
+  number,title,mergeCommit,closedAt` — `--base main` is mandatory; "landed"
+  means reachable from main, not merged into an integration branch.
+- **Integration-branch row:** for each non-default remote branch, `git
+  rev-list --count origin/main..origin/<branch>`; a branch ahead of main
+  holding flagged-risk changes with no recorded human checkoff is reported
+  here — it is invisible to both the board and a main-only landed audit
+  (live case: `claude-harness` at +9).
 - `cat STATUS.md` rows vs the results — a stale board makes itself visible
   here, not silently.
 
 **BLOCKING** — for each open issue, classify: unblocked (dispatchable) /
 blocked (name the open blocker numbers and owner) / blocked-on-human:
-- Body edges: `gh issue view <n> --json body --jq .body` → parse `Blocked by:`
-  lines; a blocker is open if `gh issue view <m>` shows it open.
-- Native dependencies: `gh api repos/<owner>/<repo>/issues/<n> --jq
-  .issue_dependencies_summary.blocked_by` (see `docs/agents/issue-tracker.md`).
-  Check both surfaces — either alone under-reports.
+- Native dependencies (primary — this repo's blockers are wired natively):
+  `gh issue list --state open --json number,title,blockedBy --jq '.[] |
+  {number, blockers: [.blockedBy.nodes[] | select(.state=="OPEN") |
+  "#\(.number) — \(.title)"]}'` — the OPEN filter is mandatory; nodes
+  include closed blockers.
+- Text fallback: `(?m)^\s*Blocked by:` over the body. An empty result is a
+  valid answer, not a failed query. Check both surfaces.
 
 **NEEDS YOU** — exactly what `docs/engineering-workflow.md` escalates to a
 human, each with its owner and source; nothing invented:
-- `ready-for-human` and `needs-info` labelled open issues
-  (`gh issue list --label ready-for-human,needs-info --state open`).
+- `ready-for-human` and `needs-info` labelled open issues — search form:
+  `gh issue list --state open --search 'label:ready-for-human,needs-info'`
+  (`--label a,b` is an AND; the search comma is OR; an empty result is
+  valid).
 - Specs waiting at the Design §6 approval gate (spec exists, child tickets
   lack `ready-for-agent`).
 - High-risk sign-offs owed (Plan §5 / Design §6 carve-outs).
@@ -63,14 +74,17 @@ human, each with its owner and source; nothing invented:
 - Deploy §3 branch-protection proof owed for merge-path changes.
 - Open PRs awaiting a human merge (`gh pr list --state open`).
 - Carried-forward review findings with an owner (Deploy §1 re-verification
-  duty): open issues carrying a carried-forward note — e.g. the STATUS.md
-  open section names them.
+  duty): open issues whose **first body line contains `Owner:`** (the
+  convention: "Part of #15 · Owner: operator", "Carried from #22 … Owner:
+  operator, re-decide at next checkpoint") — free-text "carried" matching
+  over-matches prose; cross-check against STATUS.md's owner rows and report
+  any difference as drift.
 
 **LANDED SINCE** — everything that landed in the anchor window, each with
 proof; an item without proof is reported as missing, never padded:
 - Commits: `git log --oneline <anchor>..origin/main`
-- Merged PRs (above); proof = `mergeCommit.oid` (`gh pr view <n> --json
-  mergeCommit`), **never** the PR head sha.
+- Merged PRs (above, `--base main`); proof = `mergeCommit.oid` (`gh pr view
+  <n> --json mergeCommit`), **never** the PR head sha.
 - Closed issues: `gh issue list --state closed --search "closed:>=$date"`.
 - Audit flags: **landed, proof missing**; **landed, checkoff missing** — a
   flagged-risk surface per Deploy §4 (suite-guarded, synced trio, AGENTS.md,

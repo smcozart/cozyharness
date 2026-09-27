@@ -37,10 +37,19 @@ carried findings) against the live tracker (`gh issue list --state open`,
 `gh pr list --state merged` since the anchor, labels). Every difference is
 reported; a stale board makes itself visible.
 
-**BLOCKING (Q2):** for each open issue, parse `Blocked by:` body lines AND
-native dependencies (`gh api repos/<owner>/<repo>/issues/<n> --jq
-.issue_dependencies_summary.blocked_by`). Classify: unblocked (dispatchable) /
-blocked (name open blocker numbers + owner) / blocked-on-human.
+**BLOCKING (Q2):** for each open issue, parse native dependencies AND
+`Blocked by:` body lines. Native is the primary surface (#17 wired blockers
+this way):
+
+    gh issue list --state open --json number,title,blockedBy \
+      --jq '.[] | {number, blockers: [.blockedBy.nodes[] | select(.state=="OPEN") | "#\(.number) — \(.title)"]}'
+
+`blockedBy.nodes[]` yields `{number, state, title, url}`; the
+`select(.state=="OPEN")` filter is mandatory — nodes include closed blockers,
+and without it a finished blocker reports as live. Text fallback:
+`(?m)^\s*Blocked by:` (multiline) over the body. Classify: unblocked
+(dispatchable) / blocked (open blocker numbers + owner) / blocked-on-human.
+An empty result is a valid answer, not a failed query.
 
 **NEEDS YOU (Q3)** — exactly what `docs/engineering-workflow.md` escalates:
 `ready-for-human` and `needs-info` issues; specs waiting at the Design §6
@@ -48,14 +57,33 @@ approval gate; high-risk sign-offs owed (Plan §5 / Design §6); halt-rule state
 (two consecutive QC failures → operator); factory-orchestrator step-6 ticket
 releases owed; Deploy §3 branch-protection proof owed; open PRs awaiting a
 human merge; carried-forward findings with owners, sourced from open issues
-carrying a carried-forward note (Deploy §1 re-verification duty).
+whose **first body line contains `Owner:`** (the carried-findings convention:
+"Part of #15 · Owner: operator", "Carried from #22 … Owner: operator,
+re-decide at next checkpoint"); cross-check the result against STATUS.md's
+owner rows and report any difference as drift. Free-text matching of
+"carried" in bodies over-matches (matched #31's prose) — do not use it
+(Deploy §1 re-verification duty).
+
+Label queries use the search form — `gh issue list --state open --search
+'label:ready-for-human,needs-info'` — because `--label a,b` is an AND, not an
+OR; both labels absent from every open issue is a valid empty result.
 
 **LANDED SINCE (Q4):** commits (`git log --oneline <anchor>..origin/main`),
-merged PRs (`gh pr list --state merged --search "merged:>="`; proof =
+merged PRs (`gh pr list --state merged --search "merged:>=" --base main`; proof =
 `mergeCommit.oid`, never the PR head sha), closed issues since the anchor.
 Two audit flags: **landed, proof missing** and **landed, checkoff missing**
 (a flagged-risk surface per Deploy §4 touched, but no human checkoff recorded
 in the thread).
+
+**DRIFT also carries an integration-branch row:** any remote branch ahead of
+main (`git rev-list --count origin/main..origin/<branch>` for non-default
+remote branches). A branch holding flagged-risk changes with no recorded
+human checkoff — work invisible to both the board and a main-only landed
+audit — is exactly what NEEDS YOU exists to surface.
+
+**LANDED (Q4) means reachable from origin/main.** Without `--base main`, the
+audit counts merges into integration branches as landed — those are the
+integration-branch row's business, not Q4's.
 
 ## Section 3 — output shape
 

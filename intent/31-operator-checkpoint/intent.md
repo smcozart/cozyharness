@@ -7,8 +7,10 @@ is the read-only briefing that composes gh + git + STATUS.md into one screen.
 **Why now:** the write side of the checkpoint contract exists (factory-
 orchestrator step 6 reports between tickets; Deploy §1 re-verifies carried
 findings "at the next operator checkpoint") but nothing defines the reader
-side. Proven live: STATUS.md sat 10 days stale while #28/#29 merged and #30
-opened, unreflected — drift with no detector.
+side. Proven live: an integration branch (`claude-harness`) held merged,
+gate-green, flagged-risk work invisible to both the board and a main-only
+landed audit, with no recorded human checkoff — the operator had no detector
+for any of it (side-reviewer verified: #28/#29 carry zero review checkoffs).
 
 **Outcome:** invoking the skill ("brief me" / "checkpoint" / "what needs me")
 produces a one-screen briefing — anchor, drift, landed-with-proof, live
