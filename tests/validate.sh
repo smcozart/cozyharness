@@ -18,6 +18,7 @@ FO=plugin/skills/factory-orchestrator/SKILL.md
 DOC=docs/engineering-workflow.md
 SK=plugin/skills/engineering-workflow/SKILL.md
 IC=plugin/skills/intent-conversation/SKILL.md
+DP=plugin/skills/dispatch/SKILL.md
 CHECKS="sync-rule stage-parity intent-layout adr-numbering adr-refs hooks-json skill-frontmatter skill-copies agents-commands t1-trust-wording t1-log-clobber t1-spawn-session t3-label-drift t3-precedence"
 
 # ---------- lane classifier (Deploy: review effort follows the lane; ADR 0003) ----------
@@ -172,6 +173,8 @@ check_skill_copies() {
     || { why="$SK and .claude/skills/engineering-workflow/SKILL.md differ (must be byte-identical)"; return 1; }
   cmp -s "$1/$IC" "$1/.claude/skills/intent-conversation/SKILL.md" \
     || { why="$IC and .claude/skills/intent-conversation/SKILL.md differ (must be byte-identical)"; return 1; }
+  cmp -s "$1/$DP" "$1/.claude/skills/dispatch/SKILL.md" \
+    || { why="$DP and .claude/skills/dispatch/SKILL.md differ (must be byte-identical)"; return 1; }
 }
 
 check_agents_commands() {
@@ -284,6 +287,8 @@ witness_run() {
   expect FAIL 'mutation(.claude factory copy)' skill-copies "$m"; reset_wt "$m"
   echo x >> "$m/.claude/skills/intent-conversation/SKILL.md"
   expect FAIL 'mutation(.claude intent-conversation copy)' skill-copies "$m"; reset_wt "$m"
+  echo x >> "$m/.claude/skills/dispatch/SKILL.md"
+  expect FAIL 'mutation(.claude dispatch copy)' skill-copies "$m"; reset_wt "$m"
   grep -v '^## Maintain' "$m/$DOC" > "$m/t" && mv "$m/t" "$m/$DOC"
   expect FAIL 'mutation(-## Maintain)' stage-parity "$m"; reset_wt "$m"
   grep -v '^## Maintain' "$m/$SK" > "$m/t" && mv "$m/t" "$m/$SK"
