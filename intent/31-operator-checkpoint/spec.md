@@ -1,4 +1,6 @@
-# Spec: operator-checkpoint skill (#31)
+# Spec: operator-checkpoint skill
+
+**Issue:** #31
 
 The skill is a **read-only composer**. It reads; it never writes — no labels,
 no comments, no closes, no edits to any issue, PR, or file. `git fetch origin`
