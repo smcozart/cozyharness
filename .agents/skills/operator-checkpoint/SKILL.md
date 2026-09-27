@@ -36,18 +36,29 @@ Run the queries, then compose the briefing (§3). Names, numbers, shas — not
 dumps.
 
 **DRIFT** — reconcile STATUS.md's rows (open frontier, queued next, carried
-findings) against the live tracker; every difference is reported:
+findings) against the live tracker. Drift has no section of its own; it folds
+into:
+- **NEEDS YOU** when it needs an action (a board row missing for a live item,
+  a closed issue with no proof).
+- **LIVE** as one board line when it is only information.
+- Nothing at all when the board is clean.
+
+Queries:
 - `gh issue list --state open --json number,title,labels`
 - `gh pr list --state merged --search "merged:>=$date" --base main --json
   number,title,mergeCommit,closedAt` — `--base main` is mandatory; "landed"
   means reachable from main, not merged into an integration branch.
-- **Integration-branch row:** for each non-default remote branch, `git
-  rev-list --count origin/main..origin/<branch>`; a branch ahead of main
-  holding flagged-risk changes with no recorded human checkoff is reported
-  here — it is invisible to both the board and a main-only landed audit
-  (live case: `claude-harness` at +9).
-- `cat STATUS.md` rows vs the results — a stale board makes itself visible
-  here, not silently.
+- Closed issues use the anchor **timestamp**, not the date (`closed:>=` is
+  date-granular and sweeps in issues closed earlier the same day):
+  `gh issue list --state closed --search "closed:>=$isotime" --json
+  number,title,closedAt`.
+- **Branches ahead of main:** `git rev-list --count origin/main..origin/<b>`.
+  Report only branches that need an action; suppress a branch when it is the
+  head of an open PR (the PR line covers it) or when another ahead branch
+  already contains it (`git merge-base --is-ancestor origin/<b>
+  origin/<other>`). Live case: five ahead branches reduce to one line
+  (`claude-harness +9`); `t82`/`t84` are contained in it, `t85` is PR #30's
+  head, `t31` is PR #32's head.
 
 **BLOCKING** — for each open issue, classify: unblocked (dispatchable) /
 blocked (name the open blocker numbers and owner) / blocked-on-human:
@@ -85,26 +96,66 @@ proof; an item without proof is reported as missing, never padded:
 - Commits: `git log --oneline <anchor>..origin/main`
 - Merged PRs (above, `--base main`); proof = `mergeCommit.oid` (`gh pr view
   <n> --json mergeCommit`), **never** the PR head sha.
-- Closed issues: `gh issue list --state closed --search "closed:>=$date"`.
+- Closed issues: `gh issue list --state closed --search "closed:>=$isotime"`
+  (anchor timestamp, not date). A closed issue with no verification evidence
+  and no board row is reported as **proof missing** — and therefore moves to
+  NEEDS YOU (live case: #27, closed 09-20 "parked", no proof, absent from the
+  board).
 - Audit flags: **landed, proof missing**; **landed, checkoff missing** — a
   flagged-risk surface per Deploy §4 (suite-guarded, synced trio, AGENTS.md,
   `docs/agents/`, security/trust boundary, irreversible op) touched, but no
-  human checkoff recorded in the thread.
+  human checkoff recorded in the thread. An item carrying either flag moves to
+  NEEDS YOU; it is never left under CHANGED (live case: `claude-harness +9`).
 
 ## 3. Output — one screen
 
-```
-OPERATOR CHECKPOINT — <date> · anchor <sha> (<source>)
+Order follows urgency, matching the operator's four questions: NEEDS YOU,
+BLOCKING, CHANGED, LIVE, then NEXT. The operator can stop after the first
+section. Line 2 is a summary — one count per question, so the whole picture
+lands before the first item.
 
-DRIFT     <board row vs tracker difference, or "board current">
-LANDED    #<pr> <title> — merged <mergeCommit.oid> · closes #<issue>
-          <adr path> — pushed <sha>
-LIVE      #<n> <title> — dispatchable / blocked by #<m> (<owner>)
-LIVE-PR   #<n> <title> — open, awaiting human merge
-NEEDS YOU <carried finding> — owner <who>, from <ticket>
-          <checkoff owed> — <pr/issue>
-NEXT      <single highest-leverage move — recommendation only>
 ```
+OPERATOR CHECKPOINT · run <today> · since <anchor> <anchor-ISO> (<source>)
+needs you <n> · blocked <n> · changed <c> commits, <p> PRs, <i> issues · live <n> issues, <p> PRs
+
+NEEDS YOU (<n>)
+ ! <#n or branch>  <action the human owns>
+ ! <branch>        <why, and what is owed>
+   ready-for-human / needs-info: <#s or none (valid)>
+
+BLOCKING (<n>)
+   none: all <n> open issues are dispatchable (valid)
+   #<n> blocked by #<m> (<owner>)
+
+CHANGED since <anchor>
+   <sha>     <subject>        <proof: direct push | mergeCommit.oid>
+   #<n>      <title>          <closed | proof missing ↑>
+   PRs merged to main: none (valid)
+
+LIVE
+   issues  #<n> <short> · #<n> ↑ · #<n> needs-triage
+   PRs     #<n> <branch> → <base>  <awaiting human merge | awaiting review>
+   board   <one informational board line, or nothing when clean>
+
+NEXT
+   <one recommended action — recommendation only, never performed>
+```
+
+Rules:
+- **Actions live only in NEEDS YOU**, each marked ` ! `. Nothing outside that
+  section carries the marker; every `proof missing` and `checkoff missing`
+  result belongs there.
+- **Each item appears in full exactly once.** Other sections show `#<n> ↑` —
+  "details in NEEDS YOU", which is always at the top so the lookup is short.
+- **Empty states are stated, never omitted**: `none … (valid)` on one line.
+  A section with no items still prints.
+- **Proof sits in a fixed column** on every CHANGED row: a sha, a
+  `mergeCommit.oid`, `direct push`, or the words `proof missing ↑`.
+- **No colour, no emoji** — plain text plus `↑`, so every host renders it the
+  same.
+- Cut reassurances that ask for no action ("board accurate elsewhere") and
+  repeated explanation of why an item is owned by the human — the owner field
+  is enough.
 
 ## 4. What this is not
 

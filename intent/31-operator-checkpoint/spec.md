@@ -87,8 +87,17 @@ integration-branch row's business, not Q4's.
 
 ## Section 3 — output shape
 
-One screen, in order: ANCHOR / DRIFT / LANDED (with proof) / LIVE (frontier) /
-NEEDS YOU / ONE NEXT ACTION. The next action is a recommendation only — the
+One screen, urgency-first (the operator's four questions in order): a header
+line, a one-line count summary, then **NEEDS YOU / BLOCKING / CHANGED / LIVE
+/ NEXT**. Actions live only in NEEDS YOU (` ! ` marker); each item appears in
+full exactly once and elsewhere as `#<n> ↑`; empty states print `none …
+(valid)`; every CHANGED row carries its proof in a fixed column (sha,
+`mergeCommit.oid`, `direct push`, or `proof missing ↑`). Drift has no section
+of its own — it folds into NEEDS YOU (action owed), LIVE (one informational
+board line), or nothing when clean. Branches ahead of main report only when
+an action is owed: suppress a branch that is an open PR's head or that
+another ahead branch contains (`git merge-base --is-ancestor`). Plain text
+plus `↑` only — no colour, no emoji. The next action is a recommendation; the
 skill performs no action.
 
 ## Section 4 — non-goals and wrong-tool pointers
