@@ -51,7 +51,9 @@ and without it a finished blocker reports as live. Text fallback:
 (dispatchable) / blocked (open blocker numbers + owner) / blocked-on-human.
 An empty result is a valid answer, not a failed query.
 
-**NEEDS YOU (Q3)** — exactly what `docs/engineering-workflow.md` escalates:
+**NEEDS YOU (Q3)** — exactly what `docs/engineering-workflow.md` escalates,
+each item **type-labelled** (`PR` / `issue` / `branch` — GitHub shares one
+number space, so a bare `#32` is ambiguous):
 `ready-for-human` and `needs-info` issues; specs waiting at the Design §6
 approval gate; high-risk sign-offs owed (Plan §5 / Design §6); halt-rule state
 (two consecutive QC failures → operator); factory-orchestrator step-6 ticket

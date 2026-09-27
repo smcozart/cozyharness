@@ -119,8 +119,9 @@ OPERATOR CHECKPOINT · run <today> · since <anchor> <anchor-ISO> (<source>)
 needs you <n> · blocked <n> · changed <c> commits, <p> PRs, <i> issues · live <n> issues, <p> PRs
 
 NEEDS YOU (<n>)
- ! <#n or branch>  <action the human owns>
- ! <branch>        <why, and what is owed>
+ ! PR #<n>         <action the human owns>
+ ! issue #<n>      <action the human owns>
+ ! branch <name>   <why, and what is owed>
    ready-for-human / needs-info: <#s or none (valid)>
 
 BLOCKING (<n>)
@@ -154,6 +155,11 @@ Rules:
   `mergeCommit.oid`, `direct push`, or the words `proof missing ↑`.
 - **No colour, no emoji** — plain text plus `↑`, so every host renders it the
   same.
+- **Every NEEDS YOU item is type-labelled** — `PR`, `issue`, or `branch` —
+  so the operator knows where to look before clicking: a bare `#32` is
+  ambiguous (GitHub shares one number space across issues and PRs), and the
+  live case was exactly that: `#32` read as an issue until the operator
+  discovered it was the skill's PR.
 - **The LIVE `branches` line always prints** even when every branch is
   suppressed by the action rules (open-PR head, or contained in another ahead
   branch) — the off-main landscape is what the operator watches for growth:
