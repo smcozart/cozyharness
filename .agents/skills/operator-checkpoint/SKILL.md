@@ -111,36 +111,52 @@ proof; an item without proof is reported as missing, never padded:
 
 Order follows urgency, matching the operator's four questions: NEEDS YOU,
 BLOCKING, CHANGED, LIVE, then NEXT. The operator can stop after the first
-section. Line 2 is a summary — one count per question, so the whole picture
-lands before the first item.
+section. The header block is a count summary — one count per question, so the
+whole picture lands before the first item.
+
+The whole briefing is emitted inside ONE fenced code block (```) so both pi
+and Claude Code render it monospace and the column alignment actually aligns.
+The fence is also load-bearing: without it, `*` or `_` in a title turns into
+italics and a leading `-` becomes a list item.
 
 ```
-OPERATOR CHECKPOINT · run <today> · since <anchor> <anchor-ISO> (<source>)
-needs you <n> · blocked <n> · changed <c> commits, <p> PRs, <i> issues · live <n> issues, <p> PRs
+── OPERATOR CHECKPOINT ───────────────────────────────────────────
+   run <today> · since <anchor> <anchor-ISO> (<source>)
+   needs you <n> · blocked <n> · changed <c> commit(s), <p> PR(s), <i> issue(s)
+   live <n> issue(s), <p> PR(s)
 
-NEEDS YOU (<n>)
- ! PR #<n>         <action the human owns>
- ! issue #<n>      <action the human owns>
- ! branch <name>   <why, and what is owed>
-   ready-for-human / needs-info: <#s or none (valid)>
+── NEEDS YOU (<n>) ───────────────────────────────────────────────
 
-BLOCKING (<n>)
-   none: all <n> open issues are dispatchable (valid)
-   #<n> blocked by #<m> (<owner>)
+  ! PR      #<n>     <action the human owns>
+  ! branch  <name>
+                       <why, and what is owed>
+  ! issue   #<n>     <action the human owns>
 
-CHANGED since <anchor>
-   <sha>     <subject>        <proof: direct push | mergeCommit.oid>
-   #<n>      <title>          <closed | proof missing ↑>
-   PRs merged to main: none (valid)
+    labels   ready-for-human / needs-info: <#s or none (valid)>
 
-LIVE
-   issues  #<n> <short> · #<n> ↑ · #<n> needs-triage
-   PRs     #<n> <branch> → <base>  <awaiting human merge | awaiting review>
-   branches <n> ahead of main, reducible to <branch> +<m> (<chain>, PR #<k>)
-   board   <one informational board line, or nothing when clean>
+── BLOCKING (<n>) ────────────────────────────────────────────────
 
-NEXT
-   <one recommended action — recommendation only, never performed>
+    none — all <n> open issues are dispatchable (valid)
+    #<n> blocked by #<m> (<owner>)
+
+── CHANGED since <anchor> ────────────────────────────────────────
+
+    <sha>    <subject>
+             proof: <direct push to main | mergeCommit.oid>
+    #<n>     <title>          proof missing ↑
+    PRs merged to main: none (valid)
+
+── LIVE ──────────────────────────────────────────────────────────
+
+    issues    #<n> (PR #<k> ↑) · #<n> ↑ · #<n> needs-triage
+    PRs       #<n> <branch> → <base>   awaiting human merge
+              #<n> <branch> → <base>   awaiting review
+    branches  <n> ahead of main, reducible to <branch> +<m>
+    board     <one informational board line, or nothing when clean>
+
+── NEXT ──────────────────────────────────────────────────────────
+
+    <one recommended action — recommendation only, never performed>
 ```
 
 Rules:
@@ -149,12 +165,22 @@ Rules:
   result belongs there.
 - **Each item appears in full exactly once.** Other sections show `#<n> ↑` —
   "details in NEEDS YOU", which is always at the top so the lookup is short.
+  `↑` appears only on an item that has its own NEEDS YOU line — an issue
+  tracked by a PR references the PR instead: `#31 (PR #32 ↑)`.
 - **Empty states are stated, never omitted**: `none … (valid)` on one line.
   A section with no items still prints.
-- **Proof sits in a fixed column** on every CHANGED row: a sha, a
-  `mergeCommit.oid`, `direct push`, or the words `proof missing ↑`.
-- **No colour, no emoji** — plain text plus `↑`, so every host renders it the
-  same.
+- **Proof sits under its item** on its own indented line: a sha, a
+  `mergeCommit.oid`, `direct push to main`, or the words `proof missing ↑`.
+- **No line longer than 72 columns** — herdr panes and split terminals are
+  often narrower; content that does not fit wraps to a continuation line.
+- **Replace any backtick in a title with `'` before output** — three
+  backticks inside a title would close the fence early.
+- **Counts in words, not abbreviations** — `1 commit, 0 PRs, 1 issue`, never
+  `1c 0pr 1i`; the operator asked for clarity first.
+- **Type + ref lead every NEEDS YOU row** (`! PR #32`), not owner — the
+  operator's own items dominate this section, and the type is what changes
+  what they do (open a PR, an issue, or run git). Owner appears in the text
+  only when it is not the operator.
 - **Every NEEDS YOU item is type-labelled** — `PR`, `issue`, or `branch` —
   so the operator knows where to look before clicking: a bare `#32` is
   ambiguous (GitHub shares one number space across issues and PRs), and the
@@ -166,6 +192,11 @@ Rules:
   `<n> ahead of main, reducible to <branch> +<m> (<chain>, PR #<k>)`. Live
   case: `5 ahead of main, reducible to claude-harness +9 (contained in
   t85-dispatch, PR #30; t31 is PR #32's head)`.
+- **No colour, no emoji, no closed boxes** — plain text plus `↑`, `·`, `—`,
+  and section rules only. Right-edge box padding requires exact character
+  counts, which is exactly what an emitting model does badly; rules degrade
+  gracefully where closed boxes do not (double-width rendering of `─` in
+  East-Asian locales).
 - Cut reassurances that ask for no action ("board accurate elsewhere") and
   repeated explanation of why an item is owned by the human — the owner field
   is enough.

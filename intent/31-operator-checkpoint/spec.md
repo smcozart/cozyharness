@@ -96,7 +96,13 @@ full exactly once and elsewhere as `#<n> ↑`; empty states print `none …
 (valid)`; every CHANGED row carries its proof in a fixed column (sha,
 `mergeCommit.oid`, `direct push`, or `proof missing ↑`). Drift has no section
 of its own — it folds into NEEDS YOU (action owed), LIVE (one informational
-board line), or nothing when clean. Branches ahead of main report only when
+board line), or nothing when clean. The whole briefing is one fenced code
+block (monospace alignment in both pi and Claude Code; the fence also stops
+markdown mangling of titles); header is a `──` rule, never a closed box
+(right-edge padding requires exact character counts — an emitting model does
+that badly); no line exceeds 72 columns; backticks in titles are replaced
+with `'` so they cannot close the fence; counts are written in words, not
+abbreviations; `↑` appears only on items with their own NEEDS YOU line. Branches ahead of main report only when
 an action is owed: suppress a branch that is an open PR's head or that
 another ahead branch contains (`git merge-base --is-ancestor`). The LIVE
 `branches` line always prints — even when every branch is suppressed — so the
