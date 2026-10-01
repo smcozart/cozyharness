@@ -234,5 +234,7 @@ never overwrite an existing note) with three blocks:
 Tag it `#handoff` so the next session's grounding finds it. The grounding reads
 the newest note by file name and skips any name it does not recognise, so keep
 the date prefix and hold the slug to lowercase ASCII letters, digits and
-hyphens. Then say in one line that
+hyphens. When no handoff note exists for a session that stopped some other
+way, `/cmu` reconstructs the same pickup from the tracker and git instead.
+Then say in one line that
 it is written, and stop.

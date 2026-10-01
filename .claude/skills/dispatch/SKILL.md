@@ -20,6 +20,10 @@ orchestrating session runs this skill; it never implements a ticket in its own
 checkout. A plain "go" approves only the resolved intent in front of you, never
 the whole unapproved backlog — that gate is `intent-conversation` Move 3.
 
+**Companion skill:** `cmu` reports what landed, what is in flight, and what
+needs the developer since they last looked; `cmu` never triggers this skill —
+dispatch's own triggers (above) are unchanged.
+
 Planning, read-only or explicit-pause requests override dispatch. Workers never
 recursively dispatch — the worker brief below forbids it.
 
