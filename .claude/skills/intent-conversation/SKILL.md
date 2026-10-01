@@ -50,12 +50,12 @@ empty or placeholder**:
 
 | Section | What you ask |
 |---|---|
-| Why this system exists | "What is this app for — what goes wrong today without it?" |
-| Users | "Who uses it, and what are they trying to get done?" |
-| Surfaces | "What does it consist of — screens, an API, a job, data?" |
-| Enduring purpose | "What must always be true about it?" |
-| Non-goals | "What must it never do, or never become?" |
-| How we know it is working | "How will you know it is working?" |
+| Why this system exists | "In a sentence or two, what is this app, and what problem does it solve for the business?" |
+| Users | "Who uses it day to day, and what are they trying to get done when they open it?" |
+| Surfaces | "What will people actually see and touch: screens, reports, an API, a scheduled job, data?" |
+| Enduring purpose | "As this app grows and changes, what must never be compromised? For example, the totals always match the ledger, or only HR can see pay." |
+| Non-goals | "What is this app deliberately not for — things people might ask it to do that belong somewhere else?" |
+| How we know it is working | "A few months in, how would you know it's working? What would you look at, or hear from the people using it?" |
 
 Write their answers into `SYSTEM-INTENT.md` in their own words, one section per
 heading, with a `**Status:** stated by <developer>, <date>` line at the top.
