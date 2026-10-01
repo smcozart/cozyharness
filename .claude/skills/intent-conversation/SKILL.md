@@ -53,8 +53,8 @@ empty or placeholder**:
 | Why this system exists | "In a sentence or two, what is this app, and what problem does it solve for the business?" |
 | Users | "Who uses it day to day, and what are they trying to get done when they open it?" |
 | Surfaces | "What will people actually see and touch: screens, reports, an API, a scheduled job, data?" |
-| Enduring purpose | "As this app grows and changes, what must never be compromised? For example, the totals always match the ledger, or only HR can see pay." |
-| Non-goals | "What is this app deliberately not for — things people might ask it to do that belong somewhere else?" |
+| Enduring purpose | "As this app grows and changes, what should always stay true about it? For example, the totals always match the ledger, or only HR can ever see pay." |
+| Non-goals | "What should this app never do, or never turn into? Include things people might ask for that belong somewhere else." |
 | How we know it is working | "A few months in, how would you know it's working? What would you look at, or hear from the people using it?" |
 
 Write their answers into `SYSTEM-INTENT.md` in their own words, one section per
