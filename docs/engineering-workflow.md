@@ -387,6 +387,7 @@ tooling — waits on #1.
 | Shared vocabulary | `CONTEXT.md` via `domain-modeling` | Update when terminology shifts; consumers read it before issues. |
 | Milestone retro | `/retro` | At milestones or when a failure pattern repeats. Feed findings into ADRs or process edits. |
 | Session end | `/handoff` | Compact conversation → handoff doc for the next session. References artifacts by path; never duplicates them. |
+| Session pickup | `/cmu` | Resuming after time away, or after unattended dispatch. Reads the tracker and git for a grounded delta since an anchor — landed, in flight, needs you, next. Reports only; never dispatches or writes. |
 
 ## Orchestration layer (multi-agent builds)
 
