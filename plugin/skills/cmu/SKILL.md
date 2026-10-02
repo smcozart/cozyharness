@@ -80,6 +80,19 @@ hide real work.
   `PATH`; `.factory/wt/*` worktrees; local branches ahead of the default
   branch (post-fetch, so already-merged branches don't show as in flight).
 
+**Cross-repo references.** A line naming a PR or issue in another repository
+(`owner/repo#n`, or a URL) is never stated from this repo's comment or body
+text — that text is a claim at the time it was written, not current state.
+Resolve it live first: `gh pr view <n> -R <owner/repo> --json state,mergeCommit`
+or `gh issue view <n> -R <owner/repo> --json state`. This also governs a
+*local* issue or PR: before saying it is "untouched", "no PR yet", or "no
+progress", resolve every PR or issue its own body and comments reference, in
+any repo, live — an OPEN or MERGED referenced PR is progress, even if the
+local item's labels say otherwise. If a reference cannot be resolved (no
+`gh` auth to that repo, network, deleted), print the command attempted and
+its error inline: "last reported as … (not verified — `gh … -R …` failed:
+<error>)" instead of asserting it.
+
 If a source errors or returns nothing, say so in that block rather than
 silently omitting it — "PRs: none found" is a fact; a swallowed error is not.
 
