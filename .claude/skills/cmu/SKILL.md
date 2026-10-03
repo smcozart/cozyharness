@@ -38,17 +38,20 @@ this up") — `cmu` never does that work itself.
 
 ## Pick the since-anchor
 
-In this order, stop at the first that resolves:
+Use 1 when the developer gave it. Otherwise use the **newer** of 2 and 3 —
+a stale handoff folder must not hide a fresher board — and 4 only when
+neither resolves. Read 2 and 3 on the default branch after the fetch
+(`origin/<default>`), never the checked-out branch, so every run agrees:
 
 1. **The developer's own words** — "since yesterday", "since Friday", "since I
    started the overnight run".
 2. **The newest commit date under `handoffs/`** —
-   `git log -1 --format=%cI -- handoffs/`. This is the same folder
+   `git log -1 --format=%cI origin/<default> -- handoffs/`. This is the same folder
    `pickup-handoff.md` already serves as the "entrance ramp" for (see
    `handoffs/README.md`); `cmu` reads its latest commit date rather than
    parsing file names, since this repo's own notes are nicknamed, not dated.
 3. **The newest commit date to `STATUS.md`** —
-   `git log -1 --format=%cI -- STATUS.md` — the board's last known-good
+   `git log -1 --format=%cI origin/<default> -- STATUS.md` — the board's last known-good
    moment: repo-provable, deterministic, and correct even from a fresh clone.
 4. **24 hours**, if nothing above resolves.
 
@@ -71,8 +74,27 @@ hide real work.
 - Issues updated since the anchor: opened, closed, relabelled. Read their
   comments for `HANDOFF:` lines, QC verdicts, and approval comments.
 - PRs opened, merged, or closed since the anchor; review requests on the
-  viewer; failing checks.
-- `git log --since <anchor>` on the default branch (after the fetch above).
+  viewer; failing checks; each PR's changed paths (`gh pr view <n> --json
+  files`).
+- Every open issue and open PR, whatever its age — **Needs you** is current
+  state, not a delta; a gate does not expire because the anchor moved.
+- The repo's merge policy from its workflow doc (in this plugin's canon, the
+  Deploy section): the paths **held** for a human before merge, and any paths
+  that merge on green but owe a human **review** after. When the doc names
+  only one human-gated set (a "flagged risk" set needing a human checkoff),
+  that set is both: held for open PRs, and owed review for anything that
+  merged on it without a checkoff. Say "review paths: none defined here" once
+  in **Needs you** only when the doc names no such set at all. Only the
+  repo's own workflow doc counts — never the installed plugin's canon or
+  another repo's policy; a repo whose doc names no held or review paths gets
+  exactly "review paths: none defined here" and no path-based review owed.
+- `git log --first-parent --since <start>` on the default branch and on any
+  branch PRs merged into (after the fetch above), where `<start>` is the
+  older of the anchor and the review acknowledgement below, so review owed
+  never expires because the anchor moved; when there is no acknowledgement,
+  `<start>` is the anchor. A first-parent commit that is not
+  a PR merge is a direct push; one touching a held or review path counts as a
+  merge with no review.
 - New files under `docs/adr/` and their status-history lines; new fragments
   under `docs/journal/`.
 - New files under `handoffs/`.
@@ -118,22 +140,43 @@ Next
   tags, since the anchor.
 - **In flight** — open PRs, running or idle workers, branches ahead of the
   default branch.
-- **Needs you** — PRs awaiting a human gate (`flagged-risk`, `ready-for-human`,
-  review requested, red CI); issues labelled `needs-triage` or `needs-info`
-  (the canonical triage labels, `docs/agents/triage-labels.md` —
+- **Needs you** — changed paths decide, and a `flagged-risk` label adds to
+  them (it covers what paths cannot show, such as a trust boundary):
+  **merge held** — an open PR touching a held path or labelled
+  `flagged-risk`, or awaiting a human gate (`ready-for-human`, review
+  requested, red CI); **review owed** — a merge or direct push since the last
+  acknowledgement touching a review path, with no human checkoff stated on
+  its thread. Agent verdicts (adversary, QC, `HANDOFF:`, "ready for merge")
+  are not reviews, a merge is not a review, and the merger's account does
+  not show who checked. The acknowledgement is the newest commit that
+  changes **only** `STATUS.md`, on the default branch or on a branch PRs
+  merge into (the same branches scanned above); a commit that changes
+  anything else acknowledges nothing. With no such commit, the window starts
+  at the anchor: read first-parent history on review paths since the anchor
+  and say "no acknowledgement yet; showing since `<anchor>`". Also issues
+  labelled `needs-triage` or
+  `needs-info`, or carrying no triage label at all (untriaged) (the
+  canonical triage labels, `docs/agents/triage-labels.md` —
   `needs-triage` is a human gate, not an agent one); open blockers, read from
   a `Blocked by:` body line or the issue's dependency summary
   (`gh api repos/{owner}/{repo}/issues/<n>`, the same mechanism `dispatch`
   Move 1 uses); an idle worker with no `HANDOFF:` line. Say plainly "nothing
-  waits on you" when this block is empty — do not pad it. **Never truncated.**
+  waits on you" when this block is empty — do not pad it. **Nothing here is
+  ever dropped:** merge held lists every PR; review owed past five becomes
+  one line naming every item ("review owed: 9 since f66d79b — #38 #37 #36
+  #30 #29 #28 7ae706b 03f53d2 bf6cad5"); each issue or worker class
+  (untriaged, needs-triage, needs-info, blocked, idle workers) lists five and
+  ends "+N more <class>".
 - **Next** — one to three lines in the loop's own vocabulary: approve a named
   item, review a named PR, say "go" on a named issue, or "nothing waits on
   you; N ready-for-agent, dispatch picks them up" when the frontier is clear
   and nothing needs a decision.
 
 The twenty-line budget trims **Landed** and **In flight** only, oldest first;
-a trimmed block ends with "+N more". **Needs you** is never trimmed — a
-human gate is never the line that gets cut for length.
+a trimmed block ends with "+N more". In **Needs you** a human gate (merge
+held, review owed) is never cut for length: merge held lists every PR, and
+review owed past five is one line naming every item. Issue and worker
+classes past five end in a counted line.
 
 Every line cites what the tracker or git actually shows (an issue or PR
 number, a file path, a commit). Never a claim with nothing behind it.
