@@ -84,11 +84,15 @@ hide real work.
   only one human-gated set (a "flagged risk" set needing a human checkoff),
   that set is both: held for open PRs, and owed review for anything that
   merged on it without a checkoff. Say "review paths: none defined here" once
-  in **Needs you** only when the doc names no such set at all.
+  in **Needs you** only when the doc names no such set at all. Only the
+  repo's own workflow doc counts — never the installed plugin's canon or
+  another repo's policy; a repo whose doc names no held or review paths gets
+  exactly "review paths: none defined here" and no path-based review owed.
 - `git log --first-parent --since <start>` on the default branch and on any
   branch PRs merged into (after the fetch above), where `<start>` is the
   older of the anchor and the review acknowledgement below, so review owed
-  never expires because the anchor moved. A first-parent commit that is not
+  never expires because the anchor moved; when there is no acknowledgement,
+  `<start>` is the anchor. A first-parent commit that is not
   a PR merge is a direct push; one touching a held or review path counts as a
   merge with no review.
 - New files under `docs/adr/` and their status-history lines; new fragments
@@ -147,9 +151,10 @@ Next
   not show who checked. The acknowledgement is the newest commit that
   changes **only** `STATUS.md`, on the default branch or on a branch PRs
   merge into (the same branches scanned above); a commit that changes
-  anything else acknowledges nothing. With no such commit, review owed has
-  no lower bound: read all first-parent history on review paths and say "no
-  acknowledgement yet". Also issues labelled `needs-triage` or
+  anything else acknowledges nothing. With no such commit, the window starts
+  at the anchor: read first-parent history on review paths since the anchor
+  and say "no acknowledgement yet; showing since `<anchor>`". Also issues
+  labelled `needs-triage` or
   `needs-info`, or carrying no triage label at all (untriaged) (the
   canonical triage labels, `docs/agents/triage-labels.md` —
   `needs-triage` is a human gate, not an agent one); open blockers, read from
