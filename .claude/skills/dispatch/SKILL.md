@@ -97,8 +97,9 @@ never a new issue for the same scope.
 
 Run yourself, on the worker's branch, never by switching the developer's busy
 checkout: the ticket's acceptance commands, then `bash tests/validate.sh
-origin/main..HEAD` (record base/head SHAs, full output, exit code and lane
-line). Compare the actual diff's paths to its Touches; expansion pauses
+origin/<base>..HEAD` (`<base>`: the base branch named in `AGENTS.md`,
+`**Base branch:**`, default `main`; record base/head SHAs, full output, exit
+code and lane line). Compare the actual diff's paths to its Touches; expansion pauses
 conflicting work for re-batching. Review against the ticket's spec and this
 repo's review policy. A fix needs fail-first evidence. If the branch is stale,
 the worker rebases and proof reruns before merge.
@@ -160,19 +161,19 @@ uncommitted parent work or silently mutate a running worker's brief.
 > `git branch --show-current` is not `t<n>-<slug>`, rename it (your harness's
 > branch-rename tool, or `git branch -m`) or create it from `<sha>` before
 > editing. Never force an existing branch, write in the creator's checkout,
-> commit to `main`, or push `main`.
+> commit to `<base>`, or push `<base>`.
 >
 > No keys in code or `.env`. No provisioning, deploy, migration or identity
 > operation — cite platform ADRs, never re-decide them. Test-first, shortest
 > complete diff, no speculative abstractions.
 >
 > Run and paste the ticket's acceptance commands and `bash tests/validate.sh
-> origin/main..HEAD` (exit 0, with its lane line). Fixes carry fail-first
+> origin/<base>..HEAD` (exit 0, with its lane line). Fixes carry fail-first
 > proof. Rebase a stale base and rerun before you say you're done.
 >
 > Record any decision this ticket needs an ADR for, under this repo's
 > ownership rules, in this PR — never invent an approval. Commit and push only
-> your branch; open the PR to `main` with a body file carrying the same proof,
+> your branch; open the PR to `<base>` with a body file carrying the same proof,
 > and paste it on #<n> too. Do not merge or close the issue.
 >
 > Stay available for QC/adversary corrections on this same issue after
