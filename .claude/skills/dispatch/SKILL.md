@@ -56,7 +56,8 @@ Concurrency: 2 workers by default, 1 when any candidate's Touches are unknown
 or overlapping, 0 new launches while any PR waits on a human gate. The
 developer can change this in plain language for the rest of the conversation.
 
-Reserve issue, branch, worktree path, Touches, base SHA, worker/session id, PR
+Reserve issue, branch, worktree path, Touches, base SHA (`git rev-parse
+origin/<base>` at reservation, `<base>` as in Move 5), worker/session id, PR
 and state under the repo's own ignored `.factory/` directory before launching.
 Reconcile against Git/worktrees/PRs before retrying or re-entering after a
 restart; never double-launch. This is local recovery state, not a second
@@ -139,7 +140,8 @@ uncommitted parent work or silently mutate a running worker's brief.
 ## Worker brief (send this, filled in, as the kickoff prompt)
 
 > You are the worker for issue #<n> only in <owner/repo>, worktree
-> <absolute-path>, expected branch `t<n>-<slug>`, approved base `<sha>`. You
+> <absolute-path>, expected branch `t<n>-<slug>`, approved base `<sha>`
+> (`git rev-parse origin/<base>` at reservation). You
 > implement; your creator orchestrates. Do not load `dispatch` or start
 > another ticket from here.
 >

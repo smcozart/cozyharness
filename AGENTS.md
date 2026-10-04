@@ -34,7 +34,7 @@ The standard process (planning → tickets → triage → implement → review �
 ## Commands
 
 - The **Base branch:** line above names the branch tickets start from and PR into (default main when the line is absent). The lane PARTIAL check measures a range against it (env `LANE_TARGET` overrides it; a named base that resolves to no ref prints PARTIAL), and the dispatch and intent-conversation skills read it for the worktree base, the PR base and the QC range.
-- `tests/validate.sh [<range>]` — the Test gate. Healthy shape: one `ok: <name>` line per check below, then `N ok, 0 failed`, exit 0. Pass the ticket's range at close (e.g. `origin/main..HEAD`). Paste the run in the closing comment.
+- `tests/validate.sh [<range>]` — the Test gate. Healthy shape: one `ok: <name>` line per check below, then `N ok, 0 failed`, exit 0. Pass the ticket's range at close: `origin/<base>..HEAD`, where `<base>` is the **Base branch:** above (main when absent). Paste the run in the closing comment.
 - `tests/validate.sh --witness` — replays every check's fail-first witness; exit 0 only if every bad sha / mutation fails and every good sha passes.
 - `tests/validate.sh --lane [<range>]` — classifies the diff's review lane (T0 trivial / T1 light / T2 heavy) as an allow-list over files, paths and line count (ADR 0003); the default gate run prints the same line as a trailer over its range. A classifier, not a check name: exit 0 when a lane is printed, 2 when the range is empty or invalid (then there is no lane — fix the range). Paste its line beside the gate run at close; a PARTIAL range is not valid for a close; escalate, never lower.
 - `tests/validate.sh --list` — prints the check names, which must equal this list (verified by the agents-commands check):

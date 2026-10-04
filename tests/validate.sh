@@ -62,9 +62,10 @@ lane_of() {  # lane_of <root> <range> -> sets lane (T0|T1|T2|none) and lane_why;
   fi
 }
 lane_run() {  # lane_run [<range>] -> prints the lane line with resolved shas; exit 0 on a lane, 2 on none
-  local range=${1:-} a b m base="" shown partial="" t refs="origin/main main"
+  local range=${1:-} a b m hit="" base="" shown partial="" t bl refs="origin/main main"
   # the base branch: LANE_TARGET overrides AGENTS.md's **Base branch:** line; neither set = main, as before (#47)
-  t=${LANE_TARGET:-$(sed -nE 's/^\*\*Base branch:\*\* `?([^` ]+)`?.*/\1/p' AGENTS.md 2>/dev/null | head -1)}
+  bl=$(grep -m1 '^\*\*Base branch' AGENTS.md 2>/dev/null | tr -d '\r')
+  t=${LANE_TARGET:-$(sed -nE 's/^\*\*Base branch:\*\*[[:space:]]*`?([^`[:space:]]+)`?.*/\1/p' <<<"$bl")}
   [ -z "$t" ] || refs="origin/$t $t"
   # dirty = tracked changes OR untracked files; a new file alone must not fall through to HEAD~1..HEAD
   if [ -z "$range" ]; then if ! git diff --quiet HEAD 2>/dev/null || [ -n "$(git ls-files --others --exclude-standard)" ]; then range=HEAD; else range=HEAD~1..HEAD; fi; fi
@@ -72,11 +73,14 @@ lane_run() {  # lane_run [<range>] -> prints the lane line with resolved shas; e
   if [ "$range" = HEAD ]; then shown="dirty tree vs $(git rev-parse --short HEAD)"
   elif [[ $range == *..* ]]; then
     a=$(git rev-parse --short "${range%%..*}" 2>/dev/null); b=$(git rev-parse --short "${range##*..}" 2>/dev/null); shown="$a..$b"
-    for m in $refs; do git rev-parse -q --verify "$m^{commit}" >/dev/null 2>&1 && { base=$(git merge-base "$m" "${range##*..}" 2>/dev/null); break; }; done
+    for m in $refs; do git rev-parse -q --verify "$m^{commit}" >/dev/null 2>&1 && { hit=$m; base=$(git merge-base "$m" "${range##*..}" 2>/dev/null); break; }; done
     # a partial range hides files: the close needs the ticket's full range, i.e. merge-base(base, tip)..tip
-    if [ -n "$base" ] && [ "$(git rev-parse "${range##*..}")" != "$(git rev-parse "$m")" ] \
+    # a configured base fails closed: unreadable line, no ref, or no common history all print PARTIAL
+    if [ -z "$t" ] && [ -n "$bl" ]; then partial=" — PARTIAL RANGE (base branch line in AGENTS.md unreadable); not valid for a close"
+    elif [ -n "$base" ] && [ "$(git rev-parse "${range##*..}")" != "$(git rev-parse "$m")" ] \
        && [ "$(git rev-parse "${range%%..*}" 2>/dev/null)" != "$base" ]; then partial=" — PARTIAL RANGE (base is not the merge-base with $m); not valid for a close"
-    elif [ -n "$t" ] && [ -z "$base" ]; then partial=" — PARTIAL RANGE (base branch $t not found); not valid for a close"; fi   # a configured base fails closed
+    elif [ -n "$t" ] && [ -z "$hit" ]; then partial=" — PARTIAL RANGE (base branch $t not found); not valid for a close"
+    elif [ -n "$t" ] && [ -z "$base" ]; then partial=" — PARTIAL RANGE (no common history with $hit); not valid for a close"; fi
   else shown=$range; fi
   case $lane in
     none) echo "lane: none — $lane_why ($shown)"; return 2;;
@@ -383,6 +387,8 @@ witness_run() {
   base_expect PARTIAL 'LANE_TARGET=main, branch-on-branch range' main cozyharness_full_workflow..t1-x
   base_expect valid   'AGENTS.md base, branch-on-branch range' '' cozyharness_full_workflow..t1-x
   base_expect PARTIAL 'configured base not found (fail closed)' nope main..t1-x
+  printf '**Base branch:**\n' > "$g/AGENTS.md"   # a base line that names nothing must not fall back to main
+  base_expect PARTIAL 'base branch line unreadable (fail closed)' '' main..t1-x
 
   echo "$wn witnesses, $wfail unexpected"
   exit $wfail
