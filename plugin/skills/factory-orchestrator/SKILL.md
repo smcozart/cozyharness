@@ -9,8 +9,8 @@ You orchestrate the factory build: you manage worker sessions, you do not write
 factory code yourself. Read the design issue's `intent/<n>-<slug>/spec.md` (ADR 0002:
 design tickets are child issues) for the system being built, and `.factory/design.md`
 only if present. This
-skill is the full instruction set; `.factory/supervision.md` is only a pointer back
-here. The live frontier is GitHub — nothing in a file outranks it. This is the herdr
+skill is the full instruction set; `.factory/supervision.md`, if present, is only a pointer
+back here. The live frontier is GitHub — nothing in a file outranks it. This is the herdr
 layer, spawning worker panes across a whole factory build; the `dispatch` skill
 (ADR-006 child 3) is the in-conversation layer for a single repo's own session — both
 stay.
@@ -28,7 +28,7 @@ frontier is GitHub, nothing in a file outranks it.
 1. **Orient:** `gh issue list --label ready-for-agent`. The frontier is any ticket
    whose blockers are all closed.
 2. **Dispatch:** fresh herdr pane per ticket (`herdr tab create` → note pane_id →
-   `herdr agent start <name> --kind <worker kind from AGENTS.md> --pane <id>` →
+   `herdr agent start <name> --kind <worker kind from AGENTS.md (default claude)> --pane <id>` →
    `herdr agent prompt <pane> "$(cat promptfile)"` with the Worker Prompt Template below). One ticket per
    session, never reused. Parallel-safe tickets may run in parallel panes; blocker
    edges decide order. Pre-answer the 2–3 ambiguities you'd have about the ticket
@@ -37,13 +37,15 @@ frontier is GitHub, nothing in a file outranks it.
    shows you focused).
 3. **Watch:** `herdr agent list` to poll (JSON; pane_id + agent_status). Read a
    screen with `herdr agent read <pane>` only on idle or long stall. If a worker
-   goes idle with no PR and no `HANDOFF:` line, it stalled or truncated: read its screen,
+   goes idle with no `HANDOFF:` line, it stalled or truncated: read its screen,
    send a resume directive with tighter scope (numbered slices, commit after each).
 4. **QC — run the gates yourself.** GitHub is the claim; your terminal is the proof.
-   Per ticket: run the acceptance criteria with your own commands, run the gate
-   from `AGENTS.md ## Commands` over the ticket's range (`origin/<base>..HEAD`, `<base>` =
-   the `**Base branch:**` line in `AGENTS.md`, default `main`), review the
-   diff against the design doc (lean? stdlib? no logic in cli.py? no speculative
+   Per ticket, on the worker's branch in a QC checkout or clone (for example
+   `gh pr checkout <pr>`), never on the orchestrator's base: run the acceptance
+   criteria with your own commands, run the gate from `AGENTS.md ## Commands` over the
+   ticket's range (`origin/<base>..HEAD`, `<base>` = the `**Base branch:**` line in
+   `AGENTS.md`, default `main`; an empty range or `lane: none` is not a pass), review the
+   diff against the design doc (lean? stdlib? logic where the design puts it? no speculative
    abstraction?), and a **test-justification pass**: every test must guard a behavior
    no other test guards. Findings go on the PR and the issue with the failing command —
    never a vague "please fix." Also: did this diff smuggle in a decision that needed
@@ -61,15 +63,18 @@ frontier is GitHub, nothing in a file outranks it.
    idiomatic worker output diverges from an over-specific gate. Watch for both.
 
    When QC passes, the orchestrator merges the PR under the repo's own merge policy:
-   a PR touching a path the repo's workflow doc holds for a human waits for that
-   human; otherwise `gh pr merge --squash --delete-branch <pr>`. Then it closes the
+   a flagged-risk change (the workflow doc's Who merges table) merges only after a
+   named human checkoff recorded in the thread, or under a delegation that human
+   recorded; otherwise `gh pr merge --squash --delete-branch <pr>`. Then it closes the
    issue with the proof; a merge into a branch other than the default does not
    auto-close it.
 5. **Handoff before spin-down.** Workers end by pinging the orchestrator session
    directly (`herdr agent prompt <orcha_pane> "HANDOFF: …"` — lands in this session)
    and leave the same line as an in-buffer fallback; any ADRs are pushed to the remote.
    Verify on QC: watch for the direct ping or read the screen for the line; ping the
-   worker with the handoff addendum if absent. Then close the pane (`herdr tab close`).
+   worker with the handoff addendum if absent. Review findings go back to the same
+   worker, never a new one. Close the pane (`herdr tab close`) only after the PR is
+   merged.
 6. **Checkpoint.** Report to the operator between tickets: what landed, diff stats,
    QC result, what's next. Operator releases the next ticket. Trivial tickets may be
    batch-approved; big ones get a real look.
@@ -95,7 +100,8 @@ not work.
 >    link, spec or ADR: stop and say so in your `HANDOFF:` line. Work in your own
 >    checkout or clone, never the orchestrator's, on branch `t<n>-<slug>` from
 >    `origin/<base>` (`<base>` = the `**Base branch:**` line in `AGENTS.md`, default
->    `main`); verify `git branch --show-current` before editing.
+>    `main`); verify `git branch --show-current` before editing. If `t<n>-<slug>` or a
+>    PR for #N already exists, check it out and continue; never force-push.
 > 2. Test-first: one red-green slice at a time. **Every test must justify itself —
 >    if you can't say what behavior it guards that no other test covers, don't write it.**
 > 3. Lean: stdlib first, shortest working diff, no speculative abstractions, no config
@@ -126,7 +132,7 @@ not work.
 >       not start anything else.
 >
 >    > `ORCH_PANE_ID` is passed in the worker prompt below; if absent, read it from
->    > `herdr agent list` (the focused pi-orch pane). If herdr isn't on PATH or the
+>    > `herdr agent list` (the focused orchestrator pane). If herdr isn't on PATH or the
 >    > prompt fails, the in-buffer line alone satisfies the contract.
 >
 > Note: if another worker is running in parallel, rebase onto `origin/<base>` on push
@@ -136,7 +142,7 @@ not work.
 
 | Failure | Signal | Counter |
 |---|---|---|
-| Worker batches multiple tickets without pushing/closing | git log ahead of origin, issues open, worker deep into next ticket | Interrupt via `herdr agent prompt`: stop, push and open a PR for each, with evidence, idle. Protocol restated in template step 5. |
+| Worker batches multiple tickets without pushing or opening PRs | git log ahead of origin, issues open, worker deep into next ticket | Interrupt via `herdr agent prompt`: stop, push and open a PR for each, with evidence, idle. Protocol restated in template step 5. |
 | Response truncated during long planning | idle, nothing committed, screen ends "Response was truncated" | Resume directive with numbered slices + commit-after-each + a line cap on new modules. |
 | Silent skip in gate logic (missing tier field) | stage records `unknown` with zero verdict events | Caught by orchestrator QC reproducing acceptance criteria by hand. The lesson: QC runs the gates, always. |
 | Design ambiguity stall (e.g. `scope` param) | long "working" with no commits | Pre-answer the 2-3 ambiguities you'd have about the ticket IN the worker prompt. |
@@ -144,7 +150,7 @@ not work.
 
 ## Mechanics cheatsheet
 
-- New worker pane: `herdr tab create` → note pane_id → `herdr agent start <name> --kind <worker kind from AGENTS.md> --pane <id>` → `herdr agent prompt <pane> "$(cat promptfile)"`
+- New worker pane: `herdr tab create` → note pane_id → `herdr agent start <name> --kind <worker kind from AGENTS.md (default claude)> --pane <id>` → `herdr agent prompt <pane> "$(cat promptfile)"`
 - Poll: `herdr agent list` (JSON; pane_id + agent_status per agent)
 - Read a screen: `herdr agent read <pane>`
 - Send input: `herdr agent prompt <pane> "…"`
