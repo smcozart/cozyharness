@@ -6,8 +6,8 @@ description: >
   protected main, run the new repo's gate, then hand off to
   `intent-conversation` for the system intent. Use when the developer says
   "start a new project", "new app", "set up this repo for the workflow",
-  "bootstrap this project". Never in a repo that already has `AGENTS.md`,
-  `STATUS.md` and an `origin` remote.
+  "bootstrap this project". Load it for those requests in any folder: in a
+  repo that is already set up it answers with its own one-line refusal.
 ---
 
 # New project
