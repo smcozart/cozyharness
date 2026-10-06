@@ -116,6 +116,22 @@ QC check passes, the orchestrator merges: `gh pr merge --squash --delete-branch
 <pr>`. Workers never enable auto-merge on ticket PRs — that would land a
 change before this check runs.
 
+**A held PR is announced, never implied.** When a PR waits on a human
+(`flagged-risk`, `ready-for-human`, or a path this repo's review policy holds),
+the turn ends on the fuller `Needs you:` line: the PR number and link, one line
+on what it changes, its gate state (`validate`, this QC check, the adversary
+verdict), and the two ways through — `say "merge <n>"` or merge it in GitHub.
+Nothing else waits on the developer: an unheld PR that is green and QC-clean
+merges without asking.
+
+**"merge <n>" is the checkoff.** Write `Checkoff by <developer> at <UTC
+timestamp>:` and their words verbatim to a file, post it on the PR
+(`gh pr comment <n> --body-file <file>`) before the merge, then merge. A merge
+clicked in GitHub counts the same: on the next turn read
+`gh pr view <n> --json state,mergedBy,mergedAt`, record
+`Checkoff: merged in GitHub by <login> at <time>` on the issue, and continue to
+close and retire. Never ask again about a PR that is already merged.
+
 ## Move 6 — Retire
 
 Confirm `gh pr view <pr> --json state` is `MERGED` and the worktree has
@@ -134,6 +150,11 @@ idle notification and every QC completion also re-enters Move 1 — not only
 approvals. Report what landed, active workers, gate results and retirements
 without making the developer open another surface. Never overwrite
 uncommitted parent work or silently mutate a running worker's brief.
+
+**Every turn that stops ends on one `Needs you:` line, the last line.** The
+one thing waiting on the developer and the exact words that unblock it, or
+`Needs you: nothing — <what is running and when you will report>`. The
+developer should never have to guess whether the loop is waiting on them.
 
 ## Worker brief (send this, filled in, as the kickoff prompt)
 
