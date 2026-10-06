@@ -390,6 +390,17 @@ witness_run() {
   printf '**Base branch:**\n' > "$g/AGENTS.md"   # a base line that names nothing must not fall back to main
   base_expect PARTIAL 'base branch line unreadable (fail closed)' '' main..t1-x
 
+  # new-project scaffold (#49): the file step into an empty dir must give a repo whose own gate passes
+  np_expect() {  # np_expect <ok|FAIL> <label> <command run in the scaffolded dir $np>
+    local got=FAIL out; wn=$((wn+1)); out=$(cd "$np" && eval "$3" 2>&1) && got=ok
+    if [ "$got" = "$1" ]; then echo "witness ok: new-project @$2 expected $1"
+    else echo "witness FAIL: new-project @$2 expected $1, got $got — $(tail -3 <<<"$out" | tr '\n' ' ')"; wfail=1; fi
+  }
+  local np=$BASE/np; mkdir -p "$np"; git init -q "$np"
+  np_expect ok   'scaffold into an empty dir' "bash '$m/plugin/templates/new-project/scaffold.sh' . --owner demo --name demo"
+  np_expect ok   'scaffolded gate passes' 'bash tests/validate.sh'
+  np_expect ok   'second scaffold writes nothing, skips every path' "out=\$(bash '$m/plugin/templates/new-project/scaffold.sh' . --owner demo --name demo) && ! grep -qv '^skip: ' <<<\"\$out\" && [ \"\$(grep -c . <<<\"\$out\")\" -eq \"\$(cd '$m/plugin/templates/new-project/files' && find . -type f | wc -l)\" ]"
+
   echo "$wn witnesses, $wfail unexpected"
   exit $wfail
 }
