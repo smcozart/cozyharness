@@ -6,8 +6,9 @@ description: >
   repo through a PR on branch `adopt-engineering-workflow`. Scaffolds the files
   every plugin skill reads, runs the new gate, then hands off to
   `intent-conversation`. Use when the developer says "start a new project",
-  "new app", "bootstrap this project" or "set up this repo for the workflow".
-  Not for a feature request in a repo that already runs the workflow.
+  "new app", "bootstrap this project" or "set up this repo for the workflow" —
+  also in a repo that is already set up, where it answers in one line. A
+  feature request ("a new app settings page") is not one of these.
 ---
 
 # New project
