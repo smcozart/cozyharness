@@ -403,6 +403,7 @@ witness_run() {
   }
   local np=$BASE/np; mkdir -p "$np"; git init -q "$np"
   np_expect ok   'scaffold into an empty dir' "bash '$m/plugin/templates/new-project/scaffold.sh' . --owner demo --name demo"
+  np_expect ok   'every {{TOKEN}} substituted' "! grep -rIn --exclude-dir=.git '{{' . | grep -v '\${{ github\.'"
   np_expect ok   'scaffolded gate passes' 'bash tests/validate.sh'
   np_expect ok   'scaffolded --witness passes' 'bash tests/validate.sh --witness | tail -1 | grep -qE "^[1-9][0-9]* witnesses, 0 unexpected$"'
   # a FAIL row would pass vacuously on a missing gate; assert the gate's own failure line instead
