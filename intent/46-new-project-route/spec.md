@@ -37,6 +37,12 @@ branch is `main`.
    the gate, `dispatch` and `intent-conversation`, so that work on a
    long-lived branch other than `main` targets that branch and closes
    validly.
+10. As a developer with an existing repo, I want the same request to add
+    only the missing structure as a PR, so that I can start using the
+    workflow without my code, history or branch being changed.
+11. As a developer adopting an existing repo, I want the route to read the
+    history, branches, PRs, issues and tests, and to propose the first
+    issues from them, so that the board starts from the repo's real state.
 
 ## Design concerns
 
@@ -58,10 +64,34 @@ branch is `main`.
   Until #47 merges, close with `origin/main..HEAD`; after it, with
   `origin/cozyharness_full_workflow..HEAD`.
 - **`new-project` skill (#49).** A separate skill, not a move inside
-  `intent-conversation`. It never fires in a repo that has `AGENTS.md` and
-  `STATUS.md`. Moves: ground (read-only), ask (at most two questions; owner
-  defaults from `gh api user`, asked only when `gh api user/orgs` is not
-  empty), scaffold, GitHub, verify and hand off.
+  `intent-conversation`. Moves: ground (read-only), ask (at most two
+  questions; owner defaults from `gh api user`, asked only when
+  `gh api user/orgs` is not empty), scaffold, GitHub, verify and hand off.
+  Ground classifies the folder (operator decision on #46, 2026-10-05):
+  **new** (empty, or only an empty `.git`) → the empty-folder route;
+  **its own stopped run** (only the scaffold commit, clean tree) → resume,
+  where each GitHub step checks its own end state; **set up** (`AGENTS.md`,
+  `STATUS.md` and `main` on `origin`) → a one-line `cmu` offer, and it does
+  not fire for other requests there; **existing repo** → the adopt route
+  (#56; until it lands, a one-line "not supported yet"); **inside another
+  repo** → stop.
+- **Adopt route (#56).** For an existing repo. The changes land as a PR,
+  never as a commit to the developer's branch: a clean tree is required, and
+  the work is on branch `adopt-engineering-workflow` from the default branch.
+  The base is the repo's real default branch (`**Base branch:**`,
+  `gate.yml`, ruleset). Owner/name come from the `origin` URL. File rules:
+  create-only (a clash is reported), one marked block appended to
+  `AGENTS.md`, `CLAUDE.md` and `.gitignore`, `README.md` never touched, the
+  ADR at the next free number, stop when `tests/validate.sh` is taken. The
+  app-test command is proposed from the repo and confirmed. Protection is
+  read first and only added to.
+- **Survey (#57).** A read-only move of the adopt route, before any write:
+  README and manifests, recent history by area, unmerged branches, open PRs
+  and issues, the app-test and CI results, `TODO`/`FIXME` per area. It fills
+  `STATUS.md` "Where the board is", drafts the system intent for
+  `intent-conversation`, and lists candidate issues. Existing open issues
+  get `needs-triage`, not duplicates. At most three questions, in one
+  message (test command, purpose, which candidates to file).
 - **Scaffold.** Templates live in the plugin (pinned with the tag) and are
   found relative to the skill's own `SKILL.md`, not a host variable. Files:
   `AGENTS.md` (commands, `**Base branch:** main`, tracker, labels, read
@@ -108,8 +138,8 @@ branch is `main`.
 
 ### UX
 
-- The developer sees at most two questions, never a template or a file list
-  as a form. The route ends with one line handing to the system intent.
+- The developer sees at most two questions (three on the adopt route), never
+  a template or a file list as a form. The route ends with one line handing to the system intent.
 
 ### Security
 
@@ -127,6 +157,10 @@ branch is `main`.
 - Behaviour proof: a headless session in an empty temp folder with the
   GitHub moves skipped, transcript pasted; the live proof on `fit_cozy`
   in #52.
+- #56 witness: adopt into a temp repo with a README, a `.gitignore`, an
+  `AGENTS.md` and a non-`main` default branch → original text unchanged,
+  blocks appended once, scaffolded gate passes; a dirty tree → stop.
+- #52 proves both routes: `fit_cozy` (empty) and one real existing repo.
 
 ## Out of scope
 

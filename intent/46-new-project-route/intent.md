@@ -30,7 +30,9 @@ proven on `fit_cozy`.
   the scaffolded gate passes (#49).
 - Adversary agent and guardrail in the scaffold (#50).
 - Routing from `intent-conversation` and Phase 0 to `new-project` (#51).
-- Release 1.5.0 and the `fit_cozy` proof (#52).
+- The adopt route for an existing repo, delivered as a PR (#56), and its
+  survey of the repo's real state into the first issues (#57).
+- Release 1.5.0 and the proof on `fit_cozy` and one existing repo (#52).
 
 ## Non-goals
 
@@ -41,7 +43,10 @@ proven on `fit_cozy`.
 
 ## Acceptance criteria
 
-- Every child ticket #47–#52 is closed with pasted proof.
+- Every child ticket #47–#52, #56 and #57 is closed with pasted proof.
+- In an existing repo, the same request opens one PR that adds the
+  structure without changing existing text, and proposes the first issues
+  from the repo's history.
 - In an empty folder, "start a new project" produces a repo where
   `bash tests/validate.sh` exits 0, the ruleset reads back, and
   `intent-conversation` starts its first move.
