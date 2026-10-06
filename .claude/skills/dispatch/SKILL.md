@@ -124,13 +124,23 @@ verdict), and the two ways through — `say "merge <n>"` or merge it in GitHub.
 Nothing else waits on the developer: an unheld PR that is green and QC-clean
 merges without asking.
 
-**"merge <n>" is the checkoff.** Write `Checkoff by <developer> at <UTC
-timestamp>:` and their words verbatim to a file, post it on the PR
-(`gh pr comment <n> --body-file <file>`) before the merge, then merge. A merge
-clicked in GitHub counts the same: on the next turn read
-`gh pr view <n> --json state,mergedBy,mergedAt`, record
-`Checkoff: merged in GitHub by <login> at <time>` on the issue, and continue to
-close and retire. Never ask again about a PR that is already merged.
+**"merge <n>" is the checkoff — after a green gate, never instead of one.**
+Only when `validate` is green and this QC check has passed: write `Checkoff by
+<developer> at <UTC timestamp>:` and their words verbatim to a file, post it on
+the PR thread (`gh pr comment <n> --body-file <file>`), then merge. If the gate
+is red or QC is open, say so in the `Needs you:` line and do not merge — the
+checkoff is the human half of the hold, not a bypass. A merge clicked in GitHub
+is read on the next turn (`gh pr view <n> --json state,mergedBy,mergedAt`) and
+the PR is never asked about again; whether it counts as the checkoff depends on
+who merged: a login that is not this session's own (`gh api user --jq .login`)
+and not a bot (`[bot]`) is a human click — post `Checkoff: merged in GitHub by
+<login> at <time>` on the PR thread and continue to close and retire. The
+session's own login proves nothing on a shared token (a worker or this session
+could have merged), so post the merge facts on the PR thread without the word
+"Checkoff" and end on `Needs you: confirm the merge of #<n> was yours — say
+"that was me"`; their words then become the checkoff comment. Workers never
+merge (brief below); a held PR merged by a worker is a QC failure to report,
+not a checkoff.
 
 ## Move 6 — Retire
 
