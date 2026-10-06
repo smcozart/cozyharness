@@ -6,7 +6,7 @@
 Copy this file to `intent/<issue-number>-<slug>/spec.md` — always a sibling of
 the work-item intent, named exactly `spec.md`. The issue body links to the
 spec by path; the spec links back to the issue and intent here in the header.
-Never copy the spec into the issue body (see `docs/adr/0001-*.md`).
+Never copy the spec into the issue body.
 
 ## Problem statement
 
@@ -72,7 +72,7 @@ Approved specs have no blocking open questions left.
 # Spec: Design-stage contract
 
 **Issue:** #3 · **Intent:** `intent/3-design-stage/intent.md` ·
-**Status:** approved · **ADRs:** 0001-spec-md-lives-next-to-the-intent
+**Status:** approved · **ADRs:** none
 
 ## Problem statement
 
@@ -89,7 +89,7 @@ contains, where it lives, or when a decision needs an ADR.
 
 ## Design concerns
 
-- Spec lives at `intent/<n>-<slug>/spec.md`, sibling of the intent (ADR 0001).
+- Spec lives at `intent/<n>-<slug>/spec.md`, sibling of the intent.
 - Seam under test: the workflow doc itself — a fresh agent reads it and
   produces a conforming spec.
 
