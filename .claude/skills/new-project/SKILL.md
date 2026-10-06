@@ -59,7 +59,7 @@ Each of these two lines is the whole reply — exactly this text, nothing else:
 
 > This repo is already set up for the workflow — say "catch me up" (`cmu`) to see where it stands.
 
-> This folder already has content — setting up an existing repo is not supported yet (the adopt route is planned under #46).
+> This folder already has content — setting up an existing repo is not supported yet.
 
 If `gh api user` fails, `gh` is offline or not logged in (`gh auth status`):
 say so in one line and stop.
