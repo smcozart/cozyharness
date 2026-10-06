@@ -27,6 +27,7 @@ for v in "$owner" "$name"; do
   [[ $v =~ ^[A-Za-z0-9._-]+$ ]] || { echo "invalid owner/name: $v (use --owner/--name with A-Z a-z 0-9 . _ -)" >&2; exit 2; }
 done
 [[ $base =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "invalid base: $base (A-Z a-z 0-9 . _ / -)" >&2; exit 2; }
+for f in AGENTS.md CLAUDE.md; do [ ! -L "$target/$f" ] || { echo "$f is a symlink — not supported" >&2; exit 2; }; done
 mkdir -p "$target"; target=$(cd "$target" && pwd)
 version=$(sed -nE 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' "$here/../../.claude-plugin/plugin.json")
 [ -n "$version" ] || { echo "no version in plugin.json" >&2; exit 2; }
