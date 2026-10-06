@@ -23,8 +23,9 @@ overwrites a file, so a re-run writes only what is missing.
 come from `gh` output, the origin URL, the folder name and git, checked by the
 scaffold; visibility maps to a fixed flag.
 
-**Dry run.** Stop after the local commit and say in one line which GitHub
-moves you skipped. Read-only `gh` lookups still run.
+**Dry run.** Skip Move 4 (every GitHub write) and say in one line which
+moves you skipped; Move 5 still runs on the local commit. Read-only `gh`
+lookups still run.
 
 ---
 
@@ -110,7 +111,7 @@ before the commit.
 
 On `adopt-engineering-workflow`, end with `git switch <base>`.
 
-Dry run: stop here.
+Dry run: go to Move 5.
 
 ## Move 4 — GitHub
 
