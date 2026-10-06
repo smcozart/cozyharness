@@ -116,9 +116,9 @@ check_adr_numbering() {
 
 check_app_tests() {  # runs the command on AGENTS.md's **App tests:** line; no line = no app tests yet
   local r=$1 line cmd out
-  line=$(grep -m1 -E '^([-*] )?\*\*App tests:\*\*' "$r/AGENTS.md" 2>/dev/null)   # a list bullet counts too
+  line=$(grep -m1 -E '^[[:space:]]*([-*+][[:space:]]+)?\*\*App tests(:\*\*|\*\*:)' "$r/AGENTS.md" 2>/dev/null)   # indent, a list bullet, either colon place
   [ -n "$line" ] || { why="none yet — name the command in AGENTS.md when the stack ADR lands"; return 0; }
-  cmd=$(sed -nE 's/^([-*] )?\*\*App tests:\*\*[[:space:]]*`([^`]+)`.*/\2/p' <<<"$line")
+  cmd=$(sed -nE 's/^[[:space:]]*([-*+][[:space:]]+)?\*\*App tests(:\*\*|\*\*:)[[:space:]]*`([^`]+)`.*/\3/p' <<<"$line")
   [ -n "$cmd" ] || { why="AGENTS.md **App tests:** line names no command in backticks"; return 1; }
   out=$(cd "$r" && bash -c "$cmd" 2>&1) || { why="\`$cmd\` failed: $(tail -1 <<<"$out")"; return 1; }
 }
@@ -151,7 +151,7 @@ witness_run() {
   fresh() {  # a copy of what the checks read; the app-test command is dropped (it needs the whole repo)
     rm -rf "$m"; mkdir -p "$m/docs"
     cp -R AGENTS.md STATUS.md CONTEXT.md REVIEW.md intent "$m"/ && cp -R docs/adr "$m/docs/"
-    grep -vE '^([-*] )?\*\*App tests:\*\*' AGENTS.md >"$m/AGENTS.md"
+    grep -vE '^[[:space:]]*([-*+][[:space:]]+)?\*\*App tests(:\*\*|\*\*:)' AGENTS.md >"$m/AGENTS.md"
   }
   expect() {  # expect <ok|FAIL> <label> <check>
     local got=FAIL; wn=$((wn+1)); why=""
@@ -167,6 +167,7 @@ witness_run() {
   printf '**App tests:** `true`\n' >>"$m/AGENTS.md";              expect ok 'app tests pass' app-tests; fresh
   printf '**App tests:** `false`\n' >>"$m/AGENTS.md";             expect FAIL 'app tests fail' app-tests; fresh
   printf -- '- **App tests:** `false`\n' >>"$m/AGENTS.md";          expect FAIL 'app tests fail, list-bullet line' app-tests; fresh
+  printf -- '  + **App tests**: `false`\n' >>"$m/AGENTS.md";         expect FAIL 'app tests fail, indented + bullet, colon outside the bold' app-tests; fresh
   printf '**App tests:** false\n' >>"$m/AGENTS.md";               expect FAIL 'app tests line without backticks' app-tests; fresh
   printf '# x\n' >"$m/docs/adr/$(printf %04d 2)-no-issue.md";     expect FAIL 'ADR without an Issue header' adr-numbering; fresh
   mkdir -p "$m/intent/1-x"; printf '**Issue:** #1\n' >"$m/intent/1-x/intent.md"
