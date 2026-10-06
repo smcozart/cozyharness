@@ -53,11 +53,13 @@ and changes nothing.
 | **Set up:** `AGENTS.md`, `STATUS.md`, an `origin`, and `main` on it (`origin main: 0`) | Stop with the set-up line below. |
 | **This skill's stopped run:** `AGENTS.md` and `STATUS.md`, a clean tree, one commit, subject `Start the repo under the engineering workflow` | Resume: skip Move 3 and the commit, run Move 2 only when there is no `origin`, and continue at Move 4 step 1. |
 | **New:** `ls -A` shows nothing or only `.git`, no commits, no `origin` | Full run. |
-| **Anything else** | Stop: "This folder already has content — setting up an existing repo is not supported yet (the adopt route is planned under #46)." |
+| **Anything else** | Stop with the not-supported line below. |
 
-The set-up line, exactly, with nothing else:
+Each of these two lines is the whole reply — exactly this text, nothing else:
 
 > This repo is already set up for the workflow — say "catch me up" (`cmu`) to see where it stands.
+
+> This folder already has content — setting up an existing repo is not supported yet (the adopt route is planned under #46).
 
 If `gh api user` fails, `gh` is offline or not logged in (`gh auth status`):
 say so in one line and stop.
