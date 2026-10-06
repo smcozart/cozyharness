@@ -35,7 +35,7 @@ lookups still run.
 ```bash
 pwd -P; git rev-parse --show-toplevel 2>/dev/null
 git rev-parse -q --verify HEAD; git branch --show-current; git for-each-ref --count=1
-[ -z "$(git status --porcelain 2>/dev/null)" ]; echo "clean: $?"
+[ -z "$(git status --porcelain --untracked-files=normal 2>/dev/null)" ]; echo "clean: $?"
 git remote get-url origin 2>/dev/null
 git rev-parse -q --verify refs/heads/adopt-engineering-workflow
 gh api user --jq .login; gh api user/orgs --jq '.[].login'
