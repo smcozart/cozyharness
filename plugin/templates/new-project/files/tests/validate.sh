@@ -116,9 +116,9 @@ check_adr_numbering() {
 
 check_app_tests() {  # runs the command on AGENTS.md's **App tests:** line; no line = no app tests yet
   local r=$1 line cmd out
-  line=$(grep -m1 '^\*\*App tests:\*\*' "$r/AGENTS.md" 2>/dev/null)
+  line=$(grep -m1 -E '^([-*] )?\*\*App tests:\*\*' "$r/AGENTS.md" 2>/dev/null)   # a list bullet counts too
   [ -n "$line" ] || { why="none yet — name the command in AGENTS.md when the stack ADR lands"; return 0; }
-  cmd=$(sed -nE 's/^\*\*App tests:\*\*[[:space:]]*`([^`]+)`.*/\1/p' <<<"$line")
+  cmd=$(sed -nE 's/^([-*] )?\*\*App tests:\*\*[[:space:]]*`([^`]+)`.*/\2/p' <<<"$line")
   [ -n "$cmd" ] || { why="AGENTS.md **App tests:** line names no command in backticks"; return 1; }
   out=$(cd "$r" && bash -c "$cmd" 2>&1) || { why="\`$cmd\` failed: $(tail -1 <<<"$out")"; return 1; }
 }
@@ -132,6 +132,10 @@ run() {  # run <name> <root>
 }
 default_run() {
   local c n
+  # a range git cannot read is an error, never a silent pass (an empty range is fine: lane none, exit 0)
+  if [ -n "${1:-}" ] && ! git diff --name-only "$1" >/dev/null 2>&1; then
+    echo "range: git diff $1 failed — fix the range (bad ref, or a shallow clone: git fetch --unshallow)"; exit 2
+  fi
   for c in $CHECKS; do run "$c" .; done
   if ! git rev-parse -q --verify HEAD >/dev/null; then echo "lane: none — no commits yet"
   elif [ -z "${1:-}" ] && ! git rev-parse -q --verify HEAD~1 >/dev/null && git diff --quiet HEAD && [ -z "$(git ls-files --others --exclude-standard)" ]; then echo "lane: none — first commit, nothing to compare yet"
@@ -147,7 +151,7 @@ witness_run() {
   fresh() {  # a copy of what the checks read; the app-test command is dropped (it needs the whole repo)
     rm -rf "$m"; mkdir -p "$m/docs"
     cp -R AGENTS.md STATUS.md CONTEXT.md REVIEW.md intent "$m"/ && cp -R docs/adr "$m/docs/"
-    grep -v '^\*\*App tests:\*\*' AGENTS.md >"$m/AGENTS.md"
+    grep -vE '^([-*] )?\*\*App tests:\*\*' AGENTS.md >"$m/AGENTS.md"
   }
   expect() {  # expect <ok|FAIL> <label> <check>
     local got=FAIL; wn=$((wn+1)); why=""
@@ -162,6 +166,22 @@ witness_run() {
   : >"$m/docs/adr/$(printf %04d 9)-gap.md";                       expect FAIL 'ADR number gap' adr-numbering; fresh
   printf '**App tests:** `true`\n' >>"$m/AGENTS.md";              expect ok 'app tests pass' app-tests; fresh
   printf '**App tests:** `false`\n' >>"$m/AGENTS.md";             expect FAIL 'app tests fail' app-tests; fresh
+  printf -- '- **App tests:** `false`\n' >>"$m/AGENTS.md";          expect FAIL 'app tests fail, list-bullet line' app-tests; fresh
+  printf '**App tests:** false\n' >>"$m/AGENTS.md";               expect FAIL 'app tests line without backticks' app-tests; fresh
+  printf '# x\n' >"$m/docs/adr/$(printf %04d 2)-no-issue.md";     expect FAIL 'ADR without an Issue header' adr-numbering; fresh
+  mkdir -p "$m/intent/1-x"; printf '**Issue:** #1\n' >"$m/intent/1-x/intent.md"
+  printf '**Issue:** #2 · **Intent:** `intent/1-x/intent.md`\n' >"$m/intent/1-x/spec.md"; expect FAIL 'spec cites another issue' intent-layout; fresh
+
+  # lane classifier: scratch repo main A -> ticket branch t1-x C
+  local g=$base/g; git init -q "$g"; git -C "$g" symbolic-ref HEAD refs/heads/main
+  gc() { git -C "$g" -c user.name=witness -c user.email=witness@localhost -c commit.gpgsign=false -c core.hooksPath=/dev/null "$@"; }
+  printf 'a\n' >"$g/a.md"; gc add a.md; gc commit -qm A
+  gc checkout -qb t1-x; printf 'c\n' >"$g/c.md"; gc add c.md; gc commit -qm C
+  is() {  # is <label> <command>: a row that passes when the command succeeds
+    wn=$((wn+1)); if eval "$2" >/dev/null 2>&1; then echo "witness ok: $1"; else echo "witness FAIL: $1"; wfail=1; fi
+  }
+  is 'lane @configured base not found expected PARTIAL' '(cd "$g" && LANE_TARGET=nope lane_run main..t1-x) | grep -q "PARTIAL RANGE (base branch nope not found)"'
+  is 'lane @empty range expected none' 'lane_of "$g" HEAD..HEAD; [ "$lane" = none ]'
   echo "$wn witnesses, $wfail unexpected"
   exit $wfail
 }
