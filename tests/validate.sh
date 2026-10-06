@@ -411,11 +411,12 @@ witness_run() {
   # (e) an existing repo on `trunk`: its files keep their bytes above the appended block, once
   local sc=$m/plugin/templates/new-project/scaffold.sh o=$BASE/orig; np=$BASE/np-trunk; mkdir -p "$o"
   git init -q -b trunk "$np"; for f in README.md .gitignore AGENTS.md; do echo "legacy $f" | tee "$o/$f" >"$np/$f"; done
+  mkdir -p "$np/docs/adr"; printf '**Issue:** #1\n' >"$np/docs/adr/0001-x.md"   # the policy ADR must take the next free number
   git -C "$np" add -A; git -C "$np" -c user.name=witness -c user.email=witness@localhost -c commit.gpgsign=false -c core.hooksPath=/dev/null commit -qm legacy
-  np_expect ok   'existing repo: scaffold --base trunk appends' "out=\$(bash '$sc' . --owner demo --name demo --base trunk) && grep -qx 'appended: AGENTS.md' <<<\"\$out\""
+  np_expect ok   'existing repo: scaffold --base release/x appends, policy ADR at the next free number' "out=\$(bash '$sc' . --owner demo --name demo --base release/x) && grep -qx 'appended: AGENTS.md' <<<\"\$out\" && grep -qx 'wrote: docs/adr/0002-adopt-engineering-workflow.md' <<<\"\$out\""
   np_expect ok   'existing repo: originals unchanged above the marker' "cmp README.md '$o/README.md' && for f in .gitignore AGENTS.md; do sed -n '/engineering-workflow:start/q;p' \$f | cmp - '$o/'\$f || exit 1; done"
-  np_expect ok   'existing repo: second run appends nothing' "out=\$(bash '$sc' . --owner demo --name demo --base trunk) && ! grep -q '^appended:' <<<\"\$out\" && [ \$(grep -c 'engineering-workflow:start' AGENTS.md) -eq 1 ]"
-  np_expect ok   'existing repo: gate passes, base is trunk' "bash tests/validate.sh && grep -qxF '**Base branch:** \`trunk\`' AGENTS.md"
+  np_expect ok   'existing repo: second run appends nothing' "out=\$(bash '$sc' . --owner demo --name demo --base release/x) && ! grep -q '^appended:' <<<\"\$out\" && [ \$(grep -c 'engineering-workflow:start' AGENTS.md) -eq 1 ]"
+  np_expect ok   'existing repo: gate passes, base is release/x' "bash tests/validate.sh && grep -qxF '**Base branch:** \`release/x\`' AGENTS.md"
   # (f) a base that is not a branch name is refused before anything is written
   np_expect ok   'bad --base refused, nothing written' "out=\$(bash '$sc' '$BASE/bad' --owner demo --base 'a;b' 2>&1); [ \$? -eq 2 ] && grep -q 'invalid base' <<<\"\$out\" && [ ! -e '$BASE/bad' ]"
   np=$BASE/np
