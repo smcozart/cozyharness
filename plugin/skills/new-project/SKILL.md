@@ -35,7 +35,7 @@ lookups still run.
 ```bash
 pwd -P; git rev-parse --show-toplevel 2>/dev/null
 git rev-parse -q --verify HEAD; git branch --show-current; git for-each-ref --count=1
-git diff --quiet && git diff --cached --quiet; echo "clean: $?"
+[ -z "$(git status --porcelain 2>/dev/null)" ]; echo "clean: $?"
 git remote get-url origin 2>/dev/null
 git rev-parse -q --verify refs/heads/adopt-engineering-workflow
 gh api user --jq .login; gh api user/orgs --jq '.[].login'
@@ -49,7 +49,7 @@ Stop with one line, changing nothing, on the first that holds:
 1. The toplevel exists and is not `pwd -P`: "This folder is inside the repo at `<toplevel>`."
 2. Set up locally and `origin` exists: exactly this line, nothing else —
    > This repo is already set up for the workflow — say "catch me up" (`cmu`) to see where it stands.
-3. In a repo and `clean` is not 0: "Commit or stash first."
+3. In a repo and `clean` is not 0: "Commit, stash or remove untracked files first."
 4. HEAD has no commits but `git for-each-ref` prints a ref: "This repo has branches but no commit on HEAD — not supported."
 5. `gh api user` fails: "`gh` is offline or not logged in (`gh auth status`)."
 6. HEAD has commits, `origin` exists, and the current branch is not the
