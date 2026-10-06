@@ -93,7 +93,7 @@ git symbolic-ref HEAD refs/heads/main
 git switch adopt-engineering-workflow 2>/dev/null || git switch -c adopt-engineering-workflow
 
 out=$(mktemp); echo "scaffold output: $out"
-bash <scaffold.sh> . --owner <owner> --name <name> --base <base> >"$out"; echo "scaffold exit $?"; cat "$out"
+[ "$(git branch --show-current)" = <main|adopt-engineering-workflow> ] && bash <scaffold.sh> . --owner <owner> --name <name> --base <base> >"$out"; echo "scaffold exit $?"; cat "$out"
 ```
 
 A non-zero exit: report the output and stop. Name every `skip:` of
