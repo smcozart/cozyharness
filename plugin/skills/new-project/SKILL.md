@@ -46,16 +46,17 @@ or a `**Base branch:**` line, and `STATUS.md` exists.
 
 Stop with one line, changing nothing, on the first that holds:
 
-1. The toplevel exists and is not `pwd -P`: "This folder is inside the repo at `<toplevel>`."
-2. Set up locally and `origin` exists: exactly this line, nothing else —
+1. The current branch is `adopt-engineering-workflow`: "Switch back to your base branch first."
+2. The toplevel exists and is not `pwd -P`: "This folder is inside the repo at `<toplevel>`."
+3. Set up locally and `origin` exists: exactly this line, nothing else —
    > This repo is already set up for the workflow — say "catch me up" (`cmu`) to see where it stands.
-3. In a repo and `clean` is not 0: "Commit, stash or remove untracked files first."
-4. HEAD has no commits but `git for-each-ref` prints a ref: "This repo has branches but no commit on HEAD — not supported."
-5. `gh api user` fails: "`gh` is offline or not logged in (`gh auth status`)."
-6. HEAD has commits, `origin` exists, and the current branch is not the
+4. In a repo and `clean` is not 0: "Commit, stash or remove untracked files first."
+5. HEAD has no commits but `git for-each-ref` prints a ref: "This repo has branches but no commit on HEAD — not supported."
+6. `gh api user` fails: "`gh` is offline or not logged in (`gh auth status`)."
+7. HEAD has commits, `origin` exists, and the current branch is not the
    default of `<owner>/<name>` (`gh repo view <owner>/<name> --json defaultBranchRef --jq .defaultBranchRef.name`):
    "Switch to `<default>` first."
-7. Branch `adopt-engineering-workflow` exists and
+8. Branch `adopt-engineering-workflow` exists and
    `gh pr list -R <owner>/<name> --head adopt-engineering-workflow --state open --json url --jq '.[0].url'`
    prints a URL: "PR `<url>` is open — merge it, then tell me what the app is for."
 
