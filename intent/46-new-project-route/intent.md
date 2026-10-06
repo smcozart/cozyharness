@@ -25,8 +25,9 @@ proven on `fit_cozy`.
 
 **Operator decision (2026-10-05):** this branch stops after #49. #50, #51
 and #52 are closed as not planned and move to `main` (after the #35
-catch-up), with the existing-repo route as new main tickets. No 1.5.0
-release from this branch.
+catch-up). #49 covers a brand-new folder and an existing repo (by PR);
+the survey of an existing repo into first issues is a later main ticket.
+No 1.5.0 release from this branch.
 
 ## Scope
 

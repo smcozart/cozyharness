@@ -61,13 +61,17 @@ branch is `main`.
   `intent-conversation`. Moves: ground (read-only), ask (at most two
   questions; owner defaults from `gh api user`, asked only when
   `gh api user/orgs` is not empty), scaffold, GitHub, verify and hand off.
-  Ground classifies the folder (operator decision on #46, 2026-10-05):
-  **new** (empty, or only an empty `.git`) → the full route; **its own
-  stopped run** (only the scaffold commit, clean tree) → resume, where each
-  GitHub step checks its own end state; **set up** (`AGENTS.md`,
-  `STATUS.md` and `main` on `origin`) → a one-line `cmu` offer; **any other
-  content** → a one-line "not supported yet"; **inside another repo** →
-  stop. An existing repo is not set up by this route.
+  One route for a brand-new folder and an existing repo (operator direction
+  on #46, 2026-10-06): HEAD without commits → commit to `main`,
+  `gh repo create`, labels and a ruleset; HEAD with commits → commit to
+  branch `adopt-engineering-workflow` and open a PR into the default branch,
+  never writing to that branch or its protection. The scaffold never
+  overwrites: it appends one marked block to an existing `AGENTS.md`,
+  `CLAUDE.md` and `.gitignore`, and skips every other existing file, so a
+  re-run writes only what is missing. One-line stops: inside another repo,
+  tracked changes, an unborn HEAD with other refs, a checked-out branch that
+  is not the origin's default. With an `origin` and nothing left to write:
+  the one-line `cmu` offer.
 - **Scaffold.** Templates live in the plugin (pinned with the tag) and are
   found relative to the skill's own `SKILL.md`, not a host variable. Files:
   `AGENTS.md` (commands, `**Base branch:** main`, tracker, labels, read
