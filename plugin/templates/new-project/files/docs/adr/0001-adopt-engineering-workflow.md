@@ -12,6 +12,6 @@ human, because those files check every other file; everything else merges on
 a green gate, with the review owed after the merge; a commit that changes
 only `STATUS.md` acknowledges the review of the work it reports; a tag is a
 release step. The trade-off is speed against a review that can land after the
-code. It is safe only while `main` is protected by a ruleset with a required
+code. It is safe only while `{{BASE}}` is protected by a ruleset with a required
 `gate` check, so the policy fails closed: when the required check is missing
-from `main`'s rules, every merge waits for a human checkoff.
+from `{{BASE}}`'s rules, every merge waits for a human checkoff.

@@ -9,7 +9,7 @@ This repo runs the six-stage loop of the `engineering-workflow` plugin
 plugin's `engineering-workflow` skill; this repo's merge policy is
 `docs/engineering-workflow.md` Deploy.
 
-**Base branch:** `main`
+**Base branch:** `{{BASE}}`
 
 **Worker kind:** `claude`
 
@@ -51,7 +51,7 @@ A ticket with a missing spec or link goes back to Design.
   (default claude when the line is absent).
 - `tests/validate.sh [<range>]` — the Test gate. Healthy shape: one
   `ok: <name>` line per check below, then `N ok, 0 failed`, exit 0. Pass the
-  ticket's range at close: `origin/main..HEAD`. Paste the run in the closing
+  ticket's range at close: `origin/{{BASE}}..HEAD`. Paste the run in the closing
   comment.
 - `tests/validate.sh --witness` — proves each check fails on its bad case;
   exit 0 only when every witness gives the expected result.

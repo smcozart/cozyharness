@@ -4,11 +4,11 @@ This repo runs the six-stage loop (Plan → Design → Build → Test → Deploy
 Maintain) of the `engineering-workflow` plugin, v{{PLUGIN_VERSION}}. The
 loop and its contracts live in the plugin's `engineering-workflow` skill;
 this file does not copy them. It holds only what is this repo's own: the
-merge policy below (`docs/adr/0001-adopt-engineering-workflow.md`).
+merge policy below (`docs/adr/*-adopt-engineering-workflow.md`).
 
 ## Deploy
 
-A diff merges through a PR into `main`. Every PR runs the gate
+A diff merges through a PR into `{{BASE}}`. Every PR runs the gate
 (`.github/workflows/gate.yml` → `tests/validate.sh`) and owes the review in
 `REVIEW.md`.
 
@@ -26,7 +26,7 @@ A diff merges through a PR into `main`. Every PR runs the gate
 
 ### Fail-closed
 
-Merge on green holds only while `main` is protected: `gh api
-repos/{owner}/{repo}/rules/branches/main` lists the `pull_request` rule and
+Merge on green holds only while `{{BASE}}` is protected: `gh api
+repos/{owner}/{repo}/rules/branches/{{BASE}}` lists the `pull_request` rule and
 the required status check `gate`. If it does not, every merge waits for a
 human checkoff until it does.

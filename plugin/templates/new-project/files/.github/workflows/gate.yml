@@ -2,7 +2,7 @@ name: gate
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [{{BASE}}]
 permissions:
   contents: read
 jobs:
@@ -16,7 +16,7 @@ jobs:
       - name: tests/validate.sh
         run: |
           if [ "${{ github.event_name }}" = pull_request ]; then
-            bash tests/validate.sh "origin/${{ github.base_ref || 'main' }}..HEAD"
+            bash tests/validate.sh "origin/${{ github.base_ref || '{{BASE}}' }}..HEAD"
           else
             bash tests/validate.sh
           fi
