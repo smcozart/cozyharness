@@ -133,8 +133,9 @@ run() {  # run <name> <root>
 default_run() {
   local c n
   for c in $CHECKS; do run "$c" .; done
-  if git rev-parse -q --verify HEAD >/dev/null; then lane_run "${1:-}" || true   # trailer, not a check: one paste carries both
-  else echo "lane: none — no commits yet"; fi
+  if ! git rev-parse -q --verify HEAD >/dev/null; then echo "lane: none — no commits yet"
+  elif [ -z "${1:-}" ] && ! git rev-parse -q --verify HEAD~1 >/dev/null && git diff --quiet HEAD && [ -z "$(git ls-files --others --exclude-standard)" ]; then echo "lane: none — first commit, nothing to compare yet"
+  else lane_run "${1:-}" || true; fi   # trailer, not a check: one paste carries both
   n=$(wc -w <<<"$CHECKS" | tr -d ' ')
   echo "$((n - fail_count)) ok, $fail_count failed"
 }

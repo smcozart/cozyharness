@@ -24,8 +24,9 @@ from `gh` output and the folder name, checked by the scaffold; visibility maps
 to a fixed flag. Nothing they typed reaches the shell.
 
 **Dry run.** When the developer asks for a dry run, run every move up to and
-including the local commit, skip every `gh` command, and say in one line which
-GitHub moves you skipped.
+including the local commit, skip the GitHub moves of Move 4 (repo, labels,
+ruleset, required check), and say in one line which you skipped. Move 1's
+read-only `gh api` lookups still run: the owner comes from them.
 
 ---
 
