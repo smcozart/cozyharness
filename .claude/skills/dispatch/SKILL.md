@@ -116,6 +116,32 @@ QC check passes, the orchestrator merges: `gh pr merge --squash --delete-branch
 <pr>`. Workers never enable auto-merge on ticket PRs — that would land a
 change before this check runs.
 
+**A held PR is announced, never implied.** When a PR waits on a human
+(`flagged-risk`, `ready-for-human`, or a path this repo's review policy holds),
+the turn ends on the fuller `Needs you:` line: the PR number and link, one line
+on what it changes, its gate state (`validate`, this QC check, the adversary
+verdict), and the two ways through — `say "merge <n>"` or merge it in GitHub.
+Nothing else waits on the developer: an unheld PR that is green and QC-clean
+merges without asking.
+
+**"merge <n>" is the checkoff — after a green gate, never instead of one.**
+Only when `validate` is green and this QC check has passed: write `Checkoff by
+<developer> at <UTC timestamp>:` and their words verbatim to a file, post it on
+the PR thread (`gh pr comment <n> --body-file <file>`), then merge. If the gate
+is red or QC is open, say so in the `Needs you:` line and do not merge — the
+checkoff is the human half of the hold, not a bypass. A merge clicked in GitHub
+is read on the next turn (`gh pr view <n> --json state,mergedBy,mergedAt`) and
+the PR is never asked about again; whether it counts as the checkoff depends on
+who merged: a login that is not this session's own (`gh api user --jq .login`)
+and not a bot (`[bot]`) is a human click — post `Checkoff: merged in GitHub by
+<login> at <time>` on the PR thread and continue to close and retire. The
+session's own login proves nothing on a shared token (a worker or this session
+could have merged), so post the merge facts on the PR thread without the word
+"Checkoff" and end on `Needs you: confirm the merge of #<n> was yours — say
+"that was me"`; their words then become the checkoff comment. Workers never
+merge (brief below); a held PR merged by a worker is a QC failure to report,
+not a checkoff.
+
 ## Move 6 — Retire
 
 Confirm `gh pr view <pr> --json state` is `MERGED` and the worktree has
@@ -134,6 +160,11 @@ idle notification and every QC completion also re-enters Move 1 — not only
 approvals. Report what landed, active workers, gate results and retirements
 without making the developer open another surface. Never overwrite
 uncommitted parent work or silently mutate a running worker's brief.
+
+**Every turn that stops ends on one `Needs you:` line, the last line.** The
+one thing waiting on the developer and the exact words that unblock it, or
+`Needs you: nothing — <what is running and when you will report>`. The
+developer should never have to guess whether the loop is waiting on them.
 
 ## Worker brief (send this, filled in, as the kickoff prompt)
 

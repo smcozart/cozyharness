@@ -37,6 +37,13 @@ comments go through files you write with the Write tool (`--body-file <file>`,
 `--title "$(cat <file>)"`). A quote, a backtick or a `$(` in what they said must
 land in the record verbatim, never in the shell.
 
+**Every turn that stops ends on one `Needs you:` line — the last line, always.**
+It names the one thing waiting on the developer and the exact words that
+unblock it (`Needs you: approve #7 — say "go"`), or says `Needs you: nothing —
+<what is running and when you will report>`. A PR held for a human gets the
+fuller form in `dispatch` Move 5. Never bury the ask mid-message, never end on
+a status, never end on a question the repo could have answered.
+
 ---
 
 ## Move 1 — complete the system intent
