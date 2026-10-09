@@ -73,7 +73,7 @@ checkout is never a worker, whatever the host.
 
 | Capability | Launch | Watch / steer |
 |---|---|---|
-| Desktop app with a session-creation tool (`create_session`) | Worktree workspace, autopilot kickoff carrying the worker brief below, coordinated with the creator, notified on idle. The worker renames its own branch to `t<n>-<slug>`. | Idle notification; its own session-inspect/session-message tools; keep the returned session id. |
+| Desktop app with a session-creation tool (`create_session`) | Worktree workspace, autopilot kickoff carrying the worker brief below, coordinated with the creator, notified on idle; title it `#<n> <slug> worker` when the tool takes one, so the sidebar reads as a board. The worker renames its own branch to `t<n>-<slug>`. | Idle notification; its own session-inspect/session-message tools; keep the returned session id. |
 | CLI with headless child sessions (`--worktree`) | A child headless session in its own worktree on branch `t<n>-<slug>` (verify: sibling worktree, exact branch). A shared-checkout sub-agent is not a worktree and may be used only after you have created the worktree yourself, or not at all. | Process completion and structured output; resume the exact session id, not an ambiguous "continue latest". |
 | Harness with a worktree-isolating sub-agent tool (its own worktree option) | Its documented worktree-isolation and background-completion mode; the worker checks out or creates `t<n>-<slug>`. | Its native completion/message/resume tools; keep the returned identifier. |
 
@@ -92,6 +92,14 @@ Report launches, blocked/stalled workers, PR handoffs, gate results and
 retirements in this conversation as they happen. An idle worker with no
 `HANDOFF:` line is not success — send it a concrete same-ticket correction,
 never a new issue for the same scope.
+
+**Keep a one-line worker roster.** Every Watch report and every turn that
+stops carries it, directly above the `Needs you:` line, one entry per worker
+session **this conversation launched**, in this shape:
+`Workers: #12 handed off (PR 12, awaiting QC) · #14 running · #9 retired — dismiss it`.
+The developer reads one conversation and knows what every worker is and
+whether it waits on anyone. Sessions you did not launch are never rostered
+and never closed — they are the developer's own.
 
 ## Move 5 — QC
 
@@ -146,9 +154,19 @@ not a checkoff.
 
 Confirm `gh pr view <pr> --json state` is `MERGED` and the worktree has
 nothing uncommitted or unpushed. CLI/other-host worktrees: `git worktree
-remove <path> && git branch -D <branch>`. App workspaces without an archive
-tool: report "retire pending in app", never delete from disk. Withdrawn or
-failed work keeps its branch and worktree until separately authorized cleanup.
+remove <path> && git branch -D <branch>`. **Close the worker session** with
+your harness's own session close/archive tool when it has one (then remove
+its worktree and branch the same way, so nothing stale is left for the next
+reconcile); an app workspace without such a tool is never deleted from disk —
+instead say "worker for #<n> retired — you can dismiss that session" and mark
+it `retired` on the roster until it is gone.
+
+**A worker that handed off blocked or failed does not linger either.** Send
+one concrete same-ticket correction (Move 4). If the block is the developer's
+to clear (a missing spec, a decision), say so in `Needs you:` and keep the
+worker on the roster as `blocked`. If the work is withdrawn, close the
+session on the developer's word only; its branch and worktree stay until
+separately authorized cleanup, and the roster says `withdrawn — branch kept`.
 
 ## Move 7 — The conversation keeps flowing
 
@@ -206,6 +224,12 @@ developer should never have to guess whether the loop is waiting on them.
 > your branch; open the PR to `main` with a body file carrying the same proof,
 > and paste it on #<n> too. Do not merge or close the issue.
 >
-> Stay available for QC/adversary corrections on this same issue after
-> handoff. End your final message with:
+> Handoff ends your turn. Your final message is two lines and then you stop:
+> first, one plain-words line stating what is true — on success, that the PR
+> (give its real link) is open and handed back to the orchestrator and nothing
+> more happens in this session unless the orchestrator sends a correction; on
+> a block, what you are blocked on and who clears it; then
 > `HANDOFF: ticket #<n> | pr=<url or none> | pushed=<sha range or none> | ADRs=<ids or none> | followups=<one line or none>`
+> Do not idle silently and do not start anything else. The orchestrator sends
+> QC or adversary corrections to this same session by its id if any are
+> needed, and closes the session after the merge.
