@@ -95,11 +95,11 @@ never a new issue for the same scope.
 
 **Keep a one-line worker roster.** Every Watch report and every turn that
 stops carries it, directly above the `Needs you:` line, one entry per worker
-session that exists, in this shape:
+session **this conversation launched**, in this shape:
 `Workers: #12 handed off (PR 12, awaiting QC) · #14 running · #9 retired — dismiss it`.
-The developer reads one conversation and knows what every other session is
-and whether it waits on anyone. A session that is not on the roster should
-not exist.
+The developer reads one conversation and knows what every worker is and
+whether it waits on anyone. Sessions you did not launch are never rostered
+and never closed — they are the developer's own.
 
 ## Move 5 — QC
 
@@ -155,11 +155,18 @@ not a checkoff.
 Confirm `gh pr view <pr> --json state` is `MERGED` and the worktree has
 nothing uncommitted or unpushed. CLI/other-host worktrees: `git worktree
 remove <path> && git branch -D <branch>`. **Close the worker session** with
-your harness's own session close/archive tool when it has one; an app
-workspace without such a tool is never deleted from disk — instead say
-"worker for #<n> retired — you can dismiss that session" and mark it
-`retired` on the roster until it is gone. Withdrawn or failed work keeps its
-branch and worktree until separately authorized cleanup.
+your harness's own session close/archive tool when it has one (then remove
+its worktree and branch the same way, so nothing stale is left for the next
+reconcile); an app workspace without such a tool is never deleted from disk —
+instead say "worker for #<n> retired — you can dismiss that session" and mark
+it `retired` on the roster until it is gone.
+
+**A worker that handed off blocked or failed does not linger either.** Send
+one concrete same-ticket correction (Move 4). If the block is the developer's
+to clear (a missing spec, a decision), say so in `Needs you:` and keep the
+worker on the roster as `blocked`. If the work is withdrawn, close the
+session on the developer's word only; its branch and worktree stay until
+separately authorized cleanup, and the roster says `withdrawn — branch kept`.
 
 ## Move 7 — The conversation keeps flowing
 
@@ -218,10 +225,10 @@ developer should never have to guess whether the loop is waiting on them.
 > and paste it on #<n> too. Do not merge or close the issue.
 >
 > Handoff ends your turn. Your final message is two lines and then you stop:
-> first, in plain words, `Done. PR <url> is open and handed back to the
-> orchestrator. Nothing more happens in this session unless the orchestrator
-> sends a correction.` (or what is actually true — blocked, missing spec,
-> no PR); then
+> first, one plain-words line stating what is true — on success, that the PR
+> (give its real link) is open and handed back to the orchestrator and nothing
+> more happens in this session unless the orchestrator sends a correction; on
+> a block, what you are blocked on and who clears it; then
 > `HANDOFF: ticket #<n> | pr=<url or none> | pushed=<sha range or none> | ADRs=<ids or none> | followups=<one line or none>`
 > Do not idle silently and do not start anything else. The orchestrator sends
 > QC or adversary corrections to this same session by its id if any are
