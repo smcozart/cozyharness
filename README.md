@@ -25,8 +25,10 @@ Plan ────► issue-first intake, then intent: the why (outcome, scope,
           aligned with SYSTEM-INTENT.md — human-approved; intake never waits
 Design ──► spec.md beside the intent; ADRs over the bar; vertical-slice
           tickets as child issues with blocking edges; approval gate;
-          decisions are records in the same turn (merged under the merge
-          policy)
+          a settled decision is a record in the same turn (ADR, spec
+          section, or ticket body); settling approves the decision;
+          settling is not a merge approval — the record merges only under
+          the repo's merge policy
 Build ───► one ticket per agent session; workers cite ADRs, write ADRs
           (optional plan.md sequences tickets for multi-ticket builds — not
           the agent's per-session plan-before-code)

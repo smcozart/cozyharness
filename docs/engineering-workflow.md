@@ -145,11 +145,11 @@ that moves work toward `ready-for-agent`.
    or authority rule becomes a new `docs/adr/NNNN-slug.md`; a requirement or
    design detail becomes an edit to the spec's matching section; a detail
    scoped to one ticket becomes an edit to that issue's body. Settling
-   approves the decision; its record merges under the repo's merge policy
-   (issue #39) — settling is not a merge approval, and no separate sign-off
-   is owed beyond item 6's high-risk carve-out. Reply in one line naming the
-   record. "Captured in this conversation only" and "finish mapping first,
-   then update once" are not moves; batch only when asked.
+   approves the decision. Settling is not a merge approval — the record
+   merges only under the repo's merge policy. No separate sign-off on the
+   decision is owed beyond item 6's high-risk carve-out. Reply in one line
+   naming the record. "Captured in this conversation only" and "finish
+   mapping first, then update once" are not moves; batch only when asked.
 
 ## Light lane — thin front end, same tail
 
