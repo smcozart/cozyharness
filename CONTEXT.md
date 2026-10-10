@@ -82,8 +82,9 @@ The thinner front end for a small, low-risk change: a short `intent.md`
 (problem, one-line outcome, scope, acceptance) with no `spec.md` and no
 `plan.md`. The tail is unchanged — same `ready-for-agent` contract, same
 pasted `tests/validate.sh` proof, same human gate. A defined lane, not a
-loophole; it applies only when nothing protected is touched (see the light-lane
-section of `docs/engineering-workflow.md`).
+loophole; the lane is computed, not judged — `tests/validate.sh --lane`
+prints T0 or T1 for it, T2 for the heavy lane (ADR 0003; light-lane section of
+`docs/engineering-workflow.md`).
 _Avoid_: fast track, bypass, shortcut
 
 **gate**:

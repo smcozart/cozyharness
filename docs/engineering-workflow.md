@@ -143,20 +143,44 @@ proportionate for a multi-ticket, protected-surface build; it is dead weight
 for a one-file doc tweak. The light lane is a **defined** thinner front end for
 small, low-risk work — the *same* tail (proof + human gate), a tapered head.
 
-**When the light lane applies — every line must hold:**
+**The lane is computed, then confirmed** (ADR 0003). Most of what decides a
+lane is visible to git — how many files, which paths, how many lines — so
+`tests/validate.sh --lane <range>` classifies the diff and prints one
+`lane:` line that is pasted beside the gate run at close. The lane sets the
+**review effort the diff owes** (Deploy §1):
 
-- single-file or two-file change;
-- docs-only, or a non-speculative internal change;
-- touches no suite surface (`tests/validate.sh` or any path a check guards);
-- touches no synced trio (`docs/engineering-workflow.md`, the two
-  engineering-workflow `SKILL.md` copies, `README.md`);
-- touches no AGENTS.md / CONTRIBUTING.md / security or trust boundary /
-  irreversible op;
-- changes no public contract (schema, API, the label vocabulary);
-- earns no ADR (no hard-to-reverse, surprising, or real-trade-off decision);
-- carries no multi-edge blocker — not part of a multi-ticket effort.
+| Lane | Computed trigger | Review owed |
+|---|---|---|
+| **T0 trivial** | ≤2 files, all `*.md`, ≤60 lines, every file in the **light set** and none on the T1 floor | the gate run + the human checkoff. No adversary pass. (On this repo only the archival `handoffs/*.md` qualify.) |
+| **T1 light** | ≤2 files, ≤60 changed lines, every file in the light set — or any file on the **T1 floor**: the board `STATUS.md`, `docs/training/` (a human runs it), `handoffs/pickup-handoff.md` (a session's entrance ramp) | the gate run + one **bounded** adversary pass: correctness of the diff's claims only, findings MED and above, no scope sweep |
+| **T2 heavy** | **everything else** — any file outside the light set (the light set here is `handoffs/`, `docs/training/`, `STATUS.md`, `LICENSE`; every other path, including ones the repo has not grown yet, is heavy), any instruction file wherever it sits (`CLAUDE.md`, `AGENTS.md`, `README.md`, `.mcp.json`, `.cursorrules`, `.gitmodules`), any delete, any binary, >2 files, or >60 lines | the full review loop: `REVIEW.md` axes + the unbounded adversary pass |
 
-Fail any one line → heavy lane. When in doubt, heavy lane.
+The classifier is an **allow-list**: unknown is heavy, which is what "when in
+doubt, heavy lane" means when a script says it. It reads renames as
+delete + add, so moving a contract file out of place is the delete it is,
+and it prints the resolved shas of the range it classified; a range whose
+base is not the merge-base with `main` is marked **PARTIAL** and is not valid
+for a close — the lane is always computed over the ticket's full range. If
+`--lane` is absent in a repo, or prints no `lane:` line, **the lane is T2.**
+
+The classifier sees files, not meaning. Two clauses therefore stay with the
+agent and are filled in at close beside the `lane:` line —
+`no-ADR=<y/n> not-speculative=<y/n>` — **earns no ADR** (no hard-to-reverse,
+surprising, or real-trade-off decision) and **not speculative** (no public
+contract — schema, API, label vocabulary — and no multi-edge blocker). Any
+`n` → T2. **Escalation is the only direction:** an agent may raise a computed
+lane and never lower it. Consumers extend the light set in their own
+`validate.sh` with the paths they are prepared to review on a bounded budget
+(a journal of append-only fragments, archival handoffs) — a verbatim copy is
+safe, because everything it does not name is heavy.
+
+The same run prints **`flagged: yes|no`** — the one machine-readable source
+for the **merge hold**: `yes` when the range touches the hold list approved in
+#39 (`tests/validate.sh`, `.github/workflows/**`, `.githooks/**`, the files
+that enforce the gate), so a human merges. It reports the hold list only; the
+broader flagged-risk set in Deploy §4 stays review guidance.
+
+The light lane below is **T0 and T1**; the heavy lane is **T2**.
 
 **Light-lane shape (thinner head, identical tail):**
 
@@ -170,18 +194,24 @@ Fail any one line → heavy lane. When in doubt, heavy lane.
 
 **It is a lane, not a loophole.** Nothing about the close gate relaxes.
 `ready-for-agent`, pasted proof, and the human gate are identical on both
-lanes — *only the front artifact tapers*. There is no auto-approval, no agent
-"judgement" that watches a small change self-approve, and no rule that a
-change "must always" carry a `plan.md`. The heavy lane stays mandatory for
-anything touching a protected surface or a multi-ticket effort.
+lanes — *only the front artifact and the review budget taper*. There is no
+auto-approval; the only agent judgement in play is the two stated clauses,
+and it can only escalate. No rule says a change "must always" carry a
+`plan.md`. The heavy lane stays mandatory for anything touching a protected
+surface or a multi-ticket effort, and the classifier makes that mechanical.
 
-**Light vs heavy, worked.** Fixing a typo in
-`docs/training/onboarding-runbook.md` is light lane: one file, docs-only, no
-protected surface — a two-line `intent.md`, then the same
-green-suite-plus-checkoff close. Adding the light lane itself (this change) is
-heavy lane: it edits the synced trio, a suite-checked surface, so it owes the
-sync rule (three files, one commit) and merge-path branch-protection proof —
-the protected surface, not the size, forces the lane.
+**Light vs heavy, worked.** Fixing a typo in an archival
+`handoffs/design-stage-handoff.md` is **T0**: one file, docs-only, in the
+light set — `--lane` says so, a two-line `intent.md`, the gate run, the human
+checkoff, close; no adversary pass. Fixing a typo in
+`docs/training/onboarding-runbook.md` is **T1**: the runbook's fenced blocks
+are what a new human runs verbatim, so it floors at T1 and owes one bounded
+pass even at one line; refreshing the board is T1 for the same reason —
+`STATUS.md` is the first file a session reads. Adding the light lane itself
+(#24), or this tiering (ADR 0003), is **T2**: it edits the synced trio and
+`tests/validate.sh`, which are outside the light set, so it owes the sync
+rule (three files, one commit), the full adversary pass and merge-path
+branch-protection proof — the path, not the size, forces the lane.
 
 ## Build — agents execute against the tracker
 
@@ -264,8 +294,11 @@ Deploy is what a diff owes before it merges — the same checklist at either
 seam: this repo's ticket close, or a consumer's PR.
 
 1. **The review loop.** Every diff is reviewed against
-   [`REVIEW.md`](../REVIEW.md): the `code-review` skill's two axes plus a
-   mandatory `adversary` pass on agent-produced diffs. Findings are tagged by
+   [`REVIEW.md`](../REVIEW.md): the `code-review` skill's two axes plus an
+   `adversary` pass on agent-produced diffs **sized to the computed lane**
+   (Light lane table; ADR 0003) — unbounded at T2, bounded to the diff's
+   claims and MED+ findings at T1, none at T0 where the gate is the review.
+   Findings are tagged by
    risk class (Bugs / Security / Compliance) regardless of which pass
    surfaced them; a finding is resolved by a fix commit or an explicit
    carried-forward note in the tracker with an owner other than the author,
@@ -273,8 +306,9 @@ seam: this repo's ticket close, or a consumer's PR.
    review thread (closing comment or PR) is the audit record.
 2. **The merge gate.** A close pastes, beside the Test gate's evidence:
    (a) review findings resolved or carried with an owner; (b) the pasted
-   `tests/validate.sh [<range>]` run (Test §1); (c) the adversary verdict on
-   the diff; (d) a human checkoff for flagged-risk classes (table below);
+   `tests/validate.sh [<range>]` run (Test §1); (c) the `--lane` and
+   `flagged:` lines and the adversary verdict the lane owes (T0 pastes the
+   lane line and `adversary: n/a — T0`); (d) a human checkoff for flagged-risk classes (table below);
    (e) UI tickets only: preview proof pasted — screenshot, recording, or
    standing link (consumer obligation; this repo has no UI surface);
    (f) branch-protection proof for tickets touching the merge path, others
@@ -298,7 +332,9 @@ seam: this repo's ticket close, or a consumer's PR.
    | Flagged risk: any surface a suite check asserts on (`tests/`, the synced trio, AGENTS.md, CONTRIBUTING.md, `intent/**`, `docs/adr/**`, `plugin/**`, `.agents/skills/**`, CONTEXT.md), plus `.github/**`, `docs/agents/`, security/trust boundaries, and irreversible ops | Human checkoff, recorded in the thread, after a green gate |
    | Everything else (prose, approved intents/specs, internal refactors) | Agent may land; the gate's pasted evidence is the record |
 
-   Hooks/CI/release gates are always human-authorized.
+   Hooks/CI/release gates are always human-authorized. The `flagged:` line
+   from `tests/validate.sh --lane` reports the merge hold list only (Light
+   lane; #39); it is not this table.
 
 ## Maintain — closing the loop
 

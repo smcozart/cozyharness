@@ -86,23 +86,36 @@ always-kept per-session plan-before-code.
 
 ## Light lane — thin front end, same tail
 
-A small, low-risk change takes a thinner front end. It applies only when
-**every** line holds: single-file or two-file; docs-only or a non-speculative
-internal change; touches no suite surface (`tests/validate.sh` or any
-check-guarded path); touches no synced trio (`docs/engineering-workflow.md`,
-the two engineering-workflow `SKILL.md` copies, `README.md`); touches no
-AGENTS.md / CONTRIBUTING.md / security or trust boundary / irreversible op;
-changes no public contract (schema, API, label vocabulary); earns no ADR;
-carries no multi-edge blocker. Fail any one line → heavy lane.
+A small, low-risk change takes a thinner front end and a smaller review
+budget. **The lane is computed, then confirmed** (ADR 0003): run
+`tests/validate.sh --lane <range>` over the ticket's full range and paste its
+`lane:` line beside the gate run. The classifier is an **allow-list** —
+unknown is heavy. **T0 trivial** — ≤2 files, all `*.md`, ≤60 lines, every
+file in the light set (`handoffs/`, `docs/training/`, `STATUS.md`, `LICENSE`
+here) and none on the T1 floor: the gate run + the human checkoff, no
+adversary pass. **T1 light** — same limits, or any file on the T1 floor
+(`STATUS.md`, `docs/training/`, `handoffs/pickup-handoff.md`):
+the gate run + one bounded adversary pass (the diff's claims, MED+ findings
+only). **T2 heavy** — anything outside the light set, any instruction file
+wherever it sits (`CLAUDE.md`, `AGENTS.md`, `README.md`, `.mcp.json`,
+`.cursorrules`, `.gitmodules`), any delete or binary, >2 files or >60 lines:
+the full review loop. A range marked PARTIAL, a missing `--lane`, or no
+`lane:` line all mean **T2**. The classifier sees files, not meaning, so the
+agent fills in two clauses at close — `no-ADR=<y/n> not-speculative=<y/n>` —
+and any `n` means T2. Escalate only; never lower a computed lane. Consumers
+extend the light set, never the heavy one. The same run prints `flagged: yes|no` —
+`yes` when the range touches the merge hold list (`tests/validate.sh`,
+`.github/workflows/**`, `.githooks/**`; #39), so a human merges; it is the
+hold list only, not the Deploy flagged-risk set.
 
 Shape: a short `intent/<n>-<slug>/intent.md` only — problem, one-line outcome,
 scope, acceptance — with **no** `spec.md` and **no** `plan.md`. The tail is
 identical to every close: the same `ready-for-agent` contract, the same pasted
 `tests/validate.sh [<range>]` proof, the same human checkoff. It is a defined
 lane, **not** a loophole — nothing about the close gate relaxes, there is no
-auto-approval and no agent judgement, and the heavy lane stays mandatory for
-any protected surface or multi-ticket effort. (Full detail:
-`docs/engineering-workflow.md`.)
+auto-approval, the only agent judgement is escalation, and the heavy lane
+stays mandatory for any protected surface or multi-ticket effort. (Full
+detail: `docs/engineering-workflow.md`.)
 
 ## Build — agents execute against the tracker
 
@@ -142,11 +155,12 @@ adversarial pass.
 
 ## Deploy — gated
 
-Every diff is reviewed per `REVIEW.md` (code-review two axes + mandatory
-adversary pass on agent-produced diffs; findings tagged by risk class,
-resolved or carried with an owner — never by silence). The merge gate pastes:
-review resolution, `tests/validate.sh [<range>]` (Test §1), the adversary
-verdict, a human checkoff for flagged-risk classes (suite-checked surfaces and
+Every diff is reviewed per `REVIEW.md` (code-review two axes + an adversary
+pass on agent-produced diffs sized to the computed lane — unbounded at T2,
+bounded at T1, none at T0; findings tagged by risk class, resolved or carried
+with an owner — never by silence). The merge gate pastes: review resolution,
+`tests/validate.sh [<range>]` (Test §1), the `--lane` and `flagged:` lines and
+the adversary verdict the lane owes, a human checkoff for flagged-risk classes (suite-checked surfaces and
 `.github/**`, enumerated in the Deploy section of the canonical doc, CONTRIBUTING.md,
 `docs/agents/`, security/trust boundaries, irreversible ops), preview proof
 for UI tickets, and branch-protection proof for merge-path tickets. Branch
