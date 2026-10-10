@@ -13,8 +13,8 @@ in the loop tiered verification to the change.
 **Decision.** Review effort is a function of a **lane**, and the lane is
 **computed by the Test gate**, not judged. `tests/validate.sh --lane <range>`
 classifies the diff from what git can see — file count, paths against an
-**allow-list** of light paths, changed lines, deletes, binaries, instruction
-files — and prints one `lane:` line, with resolved shas, pasted beside the
+**allow-list** of light paths, changed lines, deletes, binaries, symlinks (never
+followed), instruction files in any case — and prints one `lane:` line, with resolved shas, pasted beside the
 gate run (the default gate run prints it too, over the same range). **T0**
 (≤2 docs files, all in the light set, none on the T1 floor): the gate run and
 the human checkoff, no adversary pass. **T1** (≤2 files, ≤60 lines, all in

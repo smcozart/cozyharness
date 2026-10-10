@@ -97,8 +97,8 @@ adversary pass. **T1 light** — same limits, or any file on the T1 floor
 (`STATUS.md`, `docs/training/`, `handoffs/pickup-handoff.md`):
 the gate run + one bounded adversary pass (the diff's claims, MED+ findings
 only). **T2 heavy** — anything outside the light set, any instruction file
-wherever it sits (`CLAUDE.md`, `AGENTS.md`, `README.md`, `.mcp.json`,
-`.cursorrules`, `.gitmodules`), any delete or binary, >2 files or >60 lines:
+wherever it sits, in any case (`CLAUDE.md`, `AGENTS.md`, `README.md`, `.mcp.json`,
+`.cursorrules`, `.gitmodules`), any delete, binary or symlink, >2 files or >60 lines:
 the full review loop. A range marked PARTIAL, a missing `--lane`, or no
 `lane:` line all mean **T2**. The classifier sees files, not meaning, so the
 agent fills in two clauses at close — `no-ADR=<y/n> not-speculative=<y/n>` —

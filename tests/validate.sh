@@ -28,7 +28,8 @@ list_checks() { printf '%s\n' $CHECKS; }
 # gate run. It is an ALLOW-list — only paths in LANE_LIGHT may take a reduced budget; everything else,
 # including every path this repo has not grown yet, is T2. Renames are read as delete+add (--no-renames)
 # so a move out of a protected path is the delete it is; quotePath is off so non-ASCII paths still match.
-# Instruction files (LANE_NEVER) are T2 wherever they sit; deletes and binaries are T2. The agent still
+# Instruction files (LANE_NEVER, any case) are T2 wherever they sit; deletes, binaries and symlinks are T2
+# (a symlink is never followed — its target may sit outside the repo). The agent still
 # confirms "earns no ADR" and "not speculative", and may only ESCALATE the printed lane.
 # Consumers extend LANE_LIGHT (safe by omission) and LANE_FLOOR_T1 (light files a session acts on).
 # LANE_HOLD is the merge hold list (#39): the files that enforce the gate. `flagged: yes` = a human merges.
@@ -38,7 +39,7 @@ LANE_NEVER='(^|/)(CLAUDE|AGENTS|GEMINI|COPILOT|README)\.md$|(^|/)\.(cursorrules|
 LANE_HOLD='^(tests/validate\.sh$|\.github/workflows/|\.githooks/)'
 LANE_MAX_FILES=2; LANE_MAX_LINES=60
 lane_of() {  # lane_of <root> <range> -> sets lane (T0|T1|T2|none), lane_why and held; rc 2 when there is no lane
-  local r=$1 range=$2 st files n never outside del ns lines bin untracked="" o
+  local r=$1 range=$2 st files n never outside del ns lines bin untracked="" o links
   held=""
   st=$(git -C "$r" -c core.quotePath=off diff --no-renames --name-status "$range" 2>/dev/null) || { lane=none; lane_why="git diff $range failed — fix the range"; return 2; }
   # the dirty tree includes untracked files; `git diff HEAD` does not list them, so a new file would otherwise vanish from the lane
@@ -47,15 +48,18 @@ lane_of() {  # lane_of <root> <range> -> sets lane (T0|T1|T2|none), lane_why and
   files=$({ [ -z "$st" ] || cut -f2- <<<"$st"; [ -z "$untracked" ] || printf '%s\n' "$untracked"; }); n=$(grep -c . <<<"$files")
   held=$(grep -E "$LANE_HOLD" <<<"$files" | tr '\n' ' ')
   del=$(awk -F'\t' '$1 ~ /^D/ {print $2}' <<<"$st" | tr '\n' ' ')
-  never=$(grep -E "$LANE_NEVER" <<<"$files" | tr '\n' ' ')
+  never=$(grep -iE "$LANE_NEVER" <<<"$files" | tr '\n' ' ')
+  links=$(git -C "$r" -c core.quotePath=off diff --no-renames --raw "$range" | awk -F'\t' '$1 ~ / 120000 |^:120000 / {print $2}' | tr '\n' ' ')
   outside=$(grep -vE "$LANE_LIGHT" <<<"$files" | tr '\n' ' ')
   ns=$(git -C "$r" -c core.quotePath=off diff --no-renames --numstat "$range" | awk -F'\t' '$1=="-"||$2=="-"{b=1} {a+=$1; d+=$2} END{print a+d+0, b+0}')
   lines=${ns%% *}; bin=${ns##* }
-  while IFS= read -r o; do [ -n "$o" ] || continue   # untracked: count lines ourselves, NUL byte = binary
-    if [ "$(head -c 8000 "$r/$o" | tr -d '\000' | wc -c)" -ne "$(head -c 8000 "$r/$o" | wc -c)" ]; then bin=1; else lines=$((lines + $(wc -l <"$r/$o"))); fi
+  while IFS= read -r o; do [ -n "$o" ] || continue   # untracked: count lines ourselves, NUL byte = binary; never follow a symlink
+    if [ -L "$r/$o" ]; then links="$links$o "
+    elif [ "$(head -c 8000 "$r/$o" | tr -d '\000' | wc -c)" -ne "$(head -c 8000 "$r/$o" | wc -c)" ]; then bin=1; else lines=$((lines + $(wc -l <"$r/$o"))); fi
   done <<<"$untracked"
   if   [ -n "$never" ];                       then lane=T2; lane_why="instruction file: ${never% }"
   elif [ -n "$outside" ];                     then lane=T2; lane_why="outside the light set: ${outside% }"
+  elif [ -n "$links" ];                       then lane=T2; lane_why="symlink (not followed): ${links% }"
   elif [ -n "$del" ];                         then lane=T2; lane_why="deletes: ${del% }"
   elif [ "$bin" = 1 ];                        then lane=T2; lane_why="binary file in range"
   elif [ "$n" -gt "$LANE_MAX_FILES" ];        then lane=T2; lane_why="$n files (>$LANE_MAX_FILES)"
@@ -370,6 +374,10 @@ witness_run() {
   rm -f "$l/STATUS.md";                                                 lane_expect T2 'mutation(delete the board — L2)' "$l" HEAD; lane_reset "$l"
   printf '\x89PNG\r\n\x1a\n\x00\x01' > "$l/handoffs/x.png";             lane_expect T2 'mutation(binary — L1)' "$l" HEAD; lane_reset "$l"
   printf 'x\n' > "$l/handoffs/nöte.md";                                 lane_expect T0 'mutation(non-ASCII path — M3)' "$l" HEAD; lane_reset "$l"
+  mkdir -p "$l/handoffs/notes"; printf 'x\n' > "$l/handoffs/notes/readme.md";                              lane_expect T2 'mutation(lower-case readme.md — instruction file)' "$l" HEAD; lane_reset "$l"
+  printf 'x\n' > "$BASE/outside.md"; ln -s "$BASE/outside.md" "$l/handoffs/link.md"
+                                                                        lane_expect T2 'mutation(untracked symlink out of the repo — never followed)' "$l" HEAD
+  git -C "$l" add handoffs/link.md;                                     lane_expect T2 'mutation(staged symlink — mode 120000)' "$l" HEAD; lane_reset "$l"
 
   echo "$wn witnesses, $wfail unexpected"
   exit $wfail

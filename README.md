@@ -45,7 +45,7 @@ Maintain ─► intake: retros/incidents feed back through Plan; fixed incident 
 diff from what git sees, as an allow-list — **T0** (≤2 docs files, all in the
 light set: gate run + human checkoff, no adversary pass), **T1** (small and in
 the light set, or the board / runbook floor: one bounded adversary pass),
-**T2** (anything else — unknown paths, instruction files, deletes, >2 files
+**T2** (anything else — unknown paths, instruction files, deletes, symlinks, >2 files
 or >60 lines: the full review loop). T0/T1 take a thinner front end — a short `intent.md`,
 **no** `spec.md`/`plan.md` — and a smaller review budget, and close through
 the *same* gate: `ready-for-agent`, pasted `tests/validate.sh`, human
