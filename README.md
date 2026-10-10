@@ -41,13 +41,20 @@ Deploy ──► review loop per REVIEW.md; merge gate pasted (review resolution
 Maintain ─► intake: retros/incidents feed back through Plan; fixed incident classes → eval ledger (#8)
 ```
 
-**Light lane.** Small, low-risk changes (single/two-file, docs-only or
-non-speculative, no suite surface, no synced trio, no AGENTS/CONTRIBUTING/
-security/irreversible surface, no public contract, no ADR-earning decision,
-no multi-edge blocker) take a thinner front end — a short `intent.md`, **no**
-`spec.md`/`plan.md` — and close through the *same* gate: `ready-for-agent`,
-pasted `tests/validate.sh`, human checkoff. A defined lane, not a loophole;
-nothing about the close gate relaxes. Detail: `docs/engineering-workflow.md`.
+**Light lane, computed.** `tests/validate.sh --lane <range>` classifies a
+diff from what git sees, as an allow-list — **T0** (≤2 docs files, all in the
+light set: gate run + human checkoff, no adversary pass), **T1** (small and in
+the light set, or the board / runbook floor: one bounded adversary pass),
+**T2** (anything else — unknown paths, instruction files, deletes, symlinks, >2 files
+or >60 lines: the full review loop). T0/T1 take a thinner front end — a short `intent.md`,
+**no** `spec.md`/`plan.md` — and a smaller review budget, and close through
+the *same* gate: `ready-for-agent`, pasted `tests/validate.sh`, human
+checkoff. The agent confirms two clauses the classifier cannot see (earns no
+ADR, not speculative) and may only escalate. A defined lane, not a loophole;
+nothing about the close gate relaxes. Detail: `docs/engineering-workflow.md`,
+ADR 0003. The same run prints `flagged: yes|no` — `yes` when the range touches
+the merge hold list (`tests/validate.sh`, `.github/workflows/**`,
+`.githooks/**`; #39), so a human merges.
 
 ## Quick start
 
