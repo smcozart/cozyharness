@@ -1,0 +1,20 @@
+# The Test gate on every PR into main (#33). Advisory until the operator adds
+# the `gate` check to the main ruleset as required.
+name: gate
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history: sync-rule diffs the PR range
+      - run: bash tests/validate.sh "origin/${{ github.base_ref }}..HEAD"

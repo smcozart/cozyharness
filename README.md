@@ -30,13 +30,13 @@ Build ───► one ticket per agent session; workers cite ADRs, write ADRs
           the agent's per-session plan-before-code)
 Test ────► tests/validate.sh exits 0 (fail-first; checks and the content
           they guard protected) — run + acceptance output (+ pair for fixes)
-          pasted at close
+          pasted at close; CI runs it on every PR (check `gate`)
 Deploy ──► review loop per REVIEW.md; merge gate pasted (review resolution,
           validate.sh run, adversary verdict, human checkoff for flagged
-          risk — suite-checked surfaces, CONTRIBUTING.md, docs/agents/,
-          security/trust boundaries, irreversible ops —, preview proof for
-          UI, branch-protection proof for merge path — absent today: 403,
-          human checkoff is the gate; a 401 is not evidence of absence —
+          risk — suite-checked surfaces, .github/**, CONTRIBUTING.md,
+          docs/agents/, security/trust boundaries, irreversible ops —, preview proof for
+          UI, branch-protection proof for merge path — `gate` check advisory
+          today, human checkoff is the gate; a 401 is not evidence of absence —
           authenticate first)
 Maintain ─► intake: retros/incidents feed back through Plan; fixed incident classes → eval ledger (#8)
 ```
