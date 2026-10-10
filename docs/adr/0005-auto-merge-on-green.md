@@ -52,7 +52,7 @@ checks those files; only the files that are the gate can disable it.
 guidance, not a merge rule. ADR 0003's T0 "human checkoff" is the post-hoc
 review for an unheld diff. One GitHub identity merges, so GitHub cannot
 enforce the hold; the orchestrator skills state it (`factory-orchestrator`
-here, `dispatch` at its adoption PR, #42). Tighter
-control for production systems is a later operator decision under the
-prohibitions above. Deploy §2(d)/§4 in the synced trio, `REVIEW.md`,
+here, and `dispatch` once its hold fix (#42) is adopted into `main`
+(#35)). Tighter control for production systems is a later operator decision
+under the prohibitions above. Deploy §2(d)/§4 in the synced trio, `REVIEW.md`,
 `CONTEXT.md` and `STATUS.md` changed in the same commit.
