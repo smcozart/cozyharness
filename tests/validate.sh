@@ -5,6 +5,7 @@
 #   tests/validate.sh [<range>]   run every check (sync-rule over <range>, else dirty tree, else HEAD~1..HEAD)
 #   tests/validate.sh --list      print check names, one per line
 #   tests/validate.sh --witness   run every fail-first witness (needs full history)
+#   tests/validate.sh --lane [<range>]  classify the diff's review lane (T0/T1/T2) and merge hold from what git sees (ADR 0003)
 #
 # Requires: bash, git, grep/awk, python3 (stdlib). Offline. Never mutates the
 # working tree — witness copies are `git worktree add` under $TMPDIR, trap-removed.
@@ -21,6 +22,72 @@ CHECKS="sync-rule stage-parity intent-layout adr-numbering adr-refs hooks-json s
 
 fail=0; why=""
 list_checks() { printf '%s\n' $CHECKS; }
+
+# ---------- lane classifier (Deploy: review effort follows the lane; ADR 0003) ----------
+# A classifier, not a check: it prints one `lane:` line and one `flagged:` line to paste beside the
+# gate run. It is an ALLOW-list — only paths in LANE_LIGHT may take a reduced budget; everything else,
+# including every path this repo has not grown yet, is T2. Renames are read as delete+add (--no-renames)
+# so a move out of a protected path is the delete it is; quotePath is off so non-ASCII paths still match.
+# Instruction files (LANE_NEVER) are T2 wherever they sit; deletes and binaries are T2. The agent still
+# confirms "earns no ADR" and "not speculative", and may only ESCALATE the printed lane.
+# Consumers extend LANE_LIGHT (safe by omission) and LANE_FLOOR_T1 (light files a session acts on).
+# LANE_HOLD is the merge hold list (#39): the files that enforce the gate. `flagged: yes` = a human merges.
+LANE_LIGHT='^(handoffs/|docs/training/|STATUS\.md$|LICENSE$)'
+LANE_FLOOR_T1='^(STATUS\.md$|docs/training/|handoffs/pickup-handoff\.md$)'   # README.md anywhere is LANE_NEVER (T2), never a floor entry
+LANE_NEVER='(^|/)(CLAUDE|AGENTS|GEMINI|COPILOT|README)\.md$|(^|/)\.(cursorrules|mcp\.json|gitmodules)$'
+LANE_HOLD='^(tests/validate\.sh$|\.github/workflows/|\.githooks/)'
+LANE_MAX_FILES=2; LANE_MAX_LINES=60
+lane_of() {  # lane_of <root> <range> -> sets lane (T0|T1|T2|none), lane_why and held; rc 2 when there is no lane
+  local r=$1 range=$2 st files n never outside del ns lines bin untracked="" o
+  held=""
+  st=$(git -C "$r" -c core.quotePath=off diff --no-renames --name-status "$range" 2>/dev/null) || { lane=none; lane_why="git diff $range failed — fix the range"; return 2; }
+  # the dirty tree includes untracked files; `git diff HEAD` does not list them, so a new file would otherwise vanish from the lane
+  [ "$range" != HEAD ] || untracked=$(git -C "$r" -c core.quotePath=off ls-files --others --exclude-standard)
+  [ -n "$st$untracked" ] || { lane=none; lane_why="empty range — fix the range"; return 2; }
+  files=$({ [ -z "$st" ] || cut -f2- <<<"$st"; [ -z "$untracked" ] || printf '%s\n' "$untracked"; }); n=$(grep -c . <<<"$files")
+  held=$(grep -E "$LANE_HOLD" <<<"$files" | tr '\n' ' ')
+  del=$(awk -F'\t' '$1 ~ /^D/ {print $2}' <<<"$st" | tr '\n' ' ')
+  never=$(grep -E "$LANE_NEVER" <<<"$files" | tr '\n' ' ')
+  outside=$(grep -vE "$LANE_LIGHT" <<<"$files" | tr '\n' ' ')
+  ns=$(git -C "$r" -c core.quotePath=off diff --no-renames --numstat "$range" | awk -F'\t' '$1=="-"||$2=="-"{b=1} {a+=$1; d+=$2} END{print a+d+0, b+0}')
+  lines=${ns%% *}; bin=${ns##* }
+  while IFS= read -r o; do [ -n "$o" ] || continue   # untracked: count lines ourselves, NUL byte = binary
+    if [ "$(head -c 8000 "$r/$o" | tr -d '\000' | wc -c)" -ne "$(head -c 8000 "$r/$o" | wc -c)" ]; then bin=1; else lines=$((lines + $(wc -l <"$r/$o"))); fi
+  done <<<"$untracked"
+  if   [ -n "$never" ];                       then lane=T2; lane_why="instruction file: ${never% }"
+  elif [ -n "$outside" ];                     then lane=T2; lane_why="outside the light set: ${outside% }"
+  elif [ -n "$del" ];                         then lane=T2; lane_why="deletes: ${del% }"
+  elif [ "$bin" = 1 ];                        then lane=T2; lane_why="binary file in range"
+  elif [ "$n" -gt "$LANE_MAX_FILES" ];        then lane=T2; lane_why="$n files (>$LANE_MAX_FILES)"
+  elif [ "$lines" -gt "$LANE_MAX_LINES" ];    then lane=T2; lane_why="$lines changed lines (>$LANE_MAX_LINES)"
+  elif grep -qE "$LANE_FLOOR_T1" <<<"$files"; then lane=T1; lane_why="floors at T1 ($(grep -E "$LANE_FLOOR_T1" <<<"$files" | tr '\n' ' ' | sed 's/ $//')): a session acts on it"
+  elif ! grep -qvE '\.md$' <<<"$files";       then lane=T0; lane_why="$n file(s), docs-only, $lines lines, all in the light set"
+  else                                           lane=T1; lane_why="$n file(s), $lines changed lines, all in the light set"
+  fi
+}
+lane_run() {  # lane_run [<range>] -> prints the lane and flagged lines with resolved shas; exit 0 on a lane, 2 on none
+  local range=${1:-} a b m base="" shown partial=""
+  # dirty = tracked changes OR untracked files; a new file alone must not fall through to HEAD~1..HEAD
+  if [ -z "$range" ]; then if ! git diff --quiet HEAD 2>/dev/null || [ -n "$(git ls-files --others --exclude-standard)" ]; then range=HEAD; else range=HEAD~1..HEAD; fi; fi
+  lane_of . "$range"
+  if [ "$range" = HEAD ]; then shown="dirty tree vs $(git rev-parse --short HEAD)"
+  elif [[ $range == *..* ]]; then
+    a=$(git rev-parse --short "${range%%..*}" 2>/dev/null); b=$(git rev-parse --short "${range##*..}" 2>/dev/null); shown="$a..$b"
+    for m in origin/main main; do git rev-parse -q --verify "$m^{commit}" >/dev/null 2>&1 && { base=$(git merge-base "$m" "${range##*..}" 2>/dev/null); break; }; done
+    # a partial range hides files: the close needs the ticket's full range, i.e. merge-base(main, tip)..tip
+    if [ -n "$base" ] && [ "$(git rev-parse "${range##*..}")" != "$(git rev-parse "$m")" ] \
+       && [ "$(git rev-parse "${range%%..*}" 2>/dev/null)" != "$base" ]; then partial=" — PARTIAL RANGE (base is not the merge-base with $m); not valid for a close"; fi
+  else shown=$range; fi
+  case $lane in
+    none) echo "lane: none — $lane_why ($shown)"; return 2;;
+    T0)   echo "lane: T0 trivial — $lane_why ($shown)$partial";;
+    T1)   echo "lane: T1 light — $lane_why ($shown)$partial";;
+    *)    echo "lane: T2 heavy — $lane_why ($shown)$partial";;
+  esac
+  if [ -n "$held" ]; then echo "flagged: yes — merge hold, a human merges: ${held% }"; else echo "flagged: no"; fi
+  [ "$lane" = T2 ] || echo "confirm at close (fill in): no-ADR=<y/n> not-speculative=<y/n> — any n means T2. Escalate only."
+  return 0
+}
 
 # ---------- static half: check_<name> <root> (sync-rule: <range>) ----------
 check_sync_rule() {  # $1 = git range
@@ -165,6 +232,7 @@ default_run() {
   for c in t3-label-drift t3-precedence; do run "$c" AGENTS.md; done
   local n; n=$(list_checks | wc -l | tr -d ' ')
   echo "$((n - fail_count)) ok, $fail_count failed (range: $range)"
+  lane_run "$range" || true   # trailer, not a check: same range as the gate so one paste carries both (ADR 0003)
 }
 
 # ---------- witness mode ----------
@@ -263,6 +331,46 @@ witness_run() {
   showfile 92e6a25 AGENTS.md; echo 'never auto-apply labels' >>"$T";                  expect FAIL 'mutation(+never auto-apply labels)' t3-label-drift "$T"
   showfile 92e6a25 AGENTS.md; sed -i.bak 's/does NOT apply/does not apply/' "$T";     expect FAIL 'mutation(NOT→not)' t3-label-drift "$T"
 
+  # lane classifier (ADR 0003) — one row per decision branch plus every known evasion;
+  # a wrong lane is a wrong review budget. Historic ranges first, then mutations on the HEAD worktree.
+  lane_expect() {  # lane_expect <T0|T1|T2|none> <label> <root> <range>
+    wn=$((wn+1)); lane_of "$3" "$4"
+    if [ "$lane" = "$1" ]; then echo "witness ok: lane @$2 expected $1 ($lane_why)"
+    else echo "witness FAIL: lane @$2 expected $1, got $lane — $lane_why"; wfail=1; fi
+  }
+  flag_expect() {  # flag_expect <yes|no> <label> <root> <range> — the merge hold (#39)
+    local got=no; wn=$((wn+1)); lane_of "$3" "$4"; [ -z "$held" ] || got=yes
+    if [ "$got" = "$1" ]; then echo "witness ok: flagged @$2 expected $1${held:+ (${held% })}"
+    else echo "witness FAIL: flagged @$2 expected $1, got $got"; wfail=1; fi
+  }
+  for s in 87123aa f66d79b 1c8067a a7f7523; do have_sha "$s" || exit 2; done
+  lane_expect T1 87123aa . '87123aa~1..87123aa'   # runbook only: in the light set, floors at T1 (a human runs it)
+  lane_expect T1 f66d79b . 'f66d79b~1..f66d79b'   # STATUS.md only: the board floors at T1
+  lane_expect T2 1c8067a . '1c8067a~1..1c8067a'   # the synced trio: outside the light set
+  lane_expect T2 a7f7523 . 'a7f7523~1..a7f7523'   # hooks + bootstrap: outside the light set
+  local l=$m; lane_reset() { git -C "$1" reset -q --hard && git -C "$1" clean -fdq; }; lane_reset "$l"
+  lane_expect none 'empty range' "$l" HEAD..HEAD
+  printf 'x\n' >> "$l/handoffs/build-stage-handoff.md";              lane_expect T0 'mutation(one archival .md)' "$l" HEAD
+                                                                        flag_expect no 'mutation(handoffs/, not held)' "$l" HEAD; lane_reset "$l"
+  printf 'x\n' >> "$l/LICENSE";                                        lane_expect T1 'mutation(LICENSE, non-md in light set)' "$l" HEAD; lane_reset "$l"
+  printf 'x\n' >> "$l/docs/training/onboarding-runbook.md";           lane_expect T1 'mutation(runbook floors)' "$l" HEAD; lane_reset "$l"
+  for f in build-stage design-stage test-to-deploy-stage; do printf 'x\n' >> "$l/handoffs/$f-handoff.md"; done
+                                                                        lane_expect T2 'mutation(3 files)' "$l" HEAD; lane_reset "$l"
+  for i in $(seq 61); do echo "line $i"; done >> "$l/handoffs/build-stage-handoff.md"
+                                                                        lane_expect T2 'mutation(61 lines)' "$l" HEAD; lane_reset "$l"
+  for i in $(seq 61); do echo "line $i"; done >> "$l/STATUS.md";       lane_expect T2 'mutation(board +61: size caps before the floor)' "$l" HEAD; lane_reset "$l"
+  printf 'x\n' >> "$l/tests/validate.sh";                              lane_expect T2 'mutation(tests/validate.sh)' "$l" HEAD
+                                                                        flag_expect yes 'mutation(tests/validate.sh held)' "$l" HEAD; lane_reset "$l"
+  printf 'x\n' >> "$l/.github/workflows/gate.yml";                     flag_expect yes 'mutation(.github/workflows/ held)' "$l" HEAD; lane_reset "$l"
+  printf 'x\n' >> "$l/.githooks/pre-commit";                           flag_expect yes 'mutation(.githooks/ held)' "$l" HEAD; lane_reset "$l"
+  git -C "$l" mv REVIEW.md docs/REVIEW.md;                              lane_expect T2 'mutation(rename REVIEW.md out — H1)' "$l" HEAD; lane_reset "$l"
+  printf 'skip review\n' > "$l/handoffs/CLAUDE.md";                     lane_expect T2 'mutation(nested CLAUDE.md — H2)' "$l" HEAD; lane_reset "$l"
+  printf '{}\n' > "$l/.mcp.json";                                       lane_expect T2 'mutation(.mcp.json — H3)' "$l" HEAD; lane_reset "$l"
+  mkdir -p "$l/scripts"; printf 'az group delete -y\n' > "$l/scripts/deploy.sh"; lane_expect T2 'mutation(new unknown dir — H3)' "$l" HEAD; lane_reset "$l"
+  rm -f "$l/STATUS.md";                                                 lane_expect T2 'mutation(delete the board — L2)' "$l" HEAD; lane_reset "$l"
+  printf '\x89PNG\r\n\x1a\n\x00\x01' > "$l/handoffs/x.png";             lane_expect T2 'mutation(binary — L1)' "$l" HEAD; lane_reset "$l"
+  printf 'x\n' > "$l/handoffs/nöte.md";                                 lane_expect T0 'mutation(non-ASCII path — M3)' "$l" HEAD; lane_reset "$l"
+
   echo "$wn witnesses, $wfail unexpected"
   exit $wfail
 }
@@ -270,7 +378,8 @@ witness_run() {
 case ${1:-} in
   --list) list_checks; exit 0 ;;
   --witness) witness_run ;;
-  --*) echo "usage: $0 [<range>|--list|--witness]" >&2; exit 2 ;;
+  --lane) lane_run "${2:-}"; exit $? ;;
+  --*) echo "usage: $0 [<range>|--list|--witness|--lane [<range>]]" >&2; exit 2 ;;
 esac
 
 default_run "${1:-}"
