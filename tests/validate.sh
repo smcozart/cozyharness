@@ -205,10 +205,15 @@ witness_run() {
   worktree HEAD; local m=$W
   expect ok baseline stage-parity "$m"
   # #45: the whole gate under a hook-exported GIT_DIR in a linked worktree (end-to-end, not one check)
-  wn=$((wn+1))
-  if (cd "$m" && GIT_DIR=$(git rev-parse --git-dir) bash tests/validate.sh HEAD..HEAD >/dev/null 2>&1)
-  then echo "witness ok: gate @GIT_DIR-linked-worktree expected ok"
-  else echo "witness FAIL: gate @GIT_DIR-linked-worktree expected ok, got FAIL"; wfail=1; fi
+  gitdir_row() {  # gitdir_row <ok|FAIL> <label>
+    local got=FAIL; wn=$((wn+1))
+    (cd "$m" && GIT_DIR=$(git rev-parse --git-dir) bash tests/validate.sh HEAD..HEAD >/dev/null 2>&1) && got=ok
+    if [ "$got" = "$1" ]; then echo "witness ok: gate @$2 expected $1"
+    else echo "witness FAIL: gate @$2 expected $1, got $got"; wfail=1; fi
+  }
+  gitdir_row ok GIT_DIR-linked-worktree
+  grep -v '^unset GIT_DIR GIT_WORK_TREE' "$m/tests/validate.sh" > "$m/t" && mv "$m/t" "$m/tests/validate.sh"
+  gitdir_row FAIL 'mutation(-unset GIT_DIR)'; reset_wt "$m"
   (cd "$m" && python3 -c "p='intent/9-test-stage/intent.md';s=open(p).read().replace('#9','#8');open(p,'w').write(s)")
   expect FAIL mutation intent-layout "$m"; reset_wt "$m"
   : >"$m/docs/adr/0009-x.md"
