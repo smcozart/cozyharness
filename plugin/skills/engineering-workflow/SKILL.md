@@ -32,7 +32,10 @@ Plan → Design → Build → Test → Deploy → Maintain ──► back to Pla
 Every request becomes a GitHub issue **first** — problem, desired outcome,
 scope, non-goals. Multiple requests in one conversation split into separate
 issues (with blocking edges if related); one request, one issue, no side-lists
-in chat.
+in chat. Intake never waits (ADR 0004): file the next request the moment it
+is said, even mid-build; a dependent request is filed as its own issue with a
+blocking edge to the one ahead of it (mechanics:
+`docs/agents/issue-tracker.md`), never held for later batching.
 
 After triage clarification, capture the agreed why as **work-item intent** at
 `intent/<issue-number>-<slug>/intent.md` (template: `intent/TEMPLATE.md`). The
@@ -83,6 +86,17 @@ always-kept per-session plan-before-code.
 5. **Build read order**: issue → spec → ADRs → `CONTEXT.md` → code.
    Greenfield and brownfield run the same workflow; only the seed differs
    (brief/PRD vs diagnosis/retro).
+6. **A settled decision becomes a record in the same turn** (ADR 0004):
+   "let's go with X" / "lock that in" / "we decided" lands before the next
+   question, never held for later batching — a hard-to-reverse or
+   authority rule becomes a new ADR; a requirement or design detail becomes
+   an edit to the spec's matching section; a detail scoped to one ticket
+   becomes an edit to that issue's body. Settling approves the decision;
+   its record merges under the repo's merge policy (issue #39) — settling
+   is not a merge approval, and no separate sign-off is owed beyond item
+   4's high-risk carve-out. Reply in one line naming the record. "Captured
+   in this conversation only" and "finish mapping first, then update once"
+   are not moves; batch only when asked.
 
 ## Light lane — thin front end, same tail
 
