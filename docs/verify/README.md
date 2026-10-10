@@ -33,7 +33,10 @@ Only at events that already happen. There is no cadence.
   behavior file covers pastes a fresh run. A new incident class with no
   textual footprint gets its file in the same close (eval-on-incident).
 
-A file is written only when one of these events needs the proof.
+A file is written only when one of these events needs the proof. When a
+change alters the contract a behavior file tests, the same PR updates or
+re-pins that file; the pinned sha is the golden tag, re-pinned only at these
+events.
 
 ## #8 corpus map
 

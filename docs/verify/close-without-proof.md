@@ -41,8 +41,9 @@ a push.
 ## 4. Run mechanics (pinned)
 
 Who: the runner of the adoption PR or the incident-fix close (Format: When a
-run happens), never the subject session. Reference host: Claude Code headless
-(`claude -p`); swap in the host's equivalent. Run from the harness checkout
+run happens), never the subject session. Spawn: a fresh session in the host's
+headless mode (for example, `claude -p` under Claude Code, as in the script
+below). Run from the harness checkout
 (`H`); the subject clone is the golden tag, so it does not contain this file.
 
 ```bash
