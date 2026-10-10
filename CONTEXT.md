@@ -131,3 +131,9 @@ writes are text only until the eval harness exists (#1). Fixed incident
 classes land here per the Maintain section's eval-on-incident rule.
 _Avoid_: eval suite (nothing runs yet), regression tests (those are
 checks)
+
+**behavior file**:
+An authored run for one ledger behavior, at `docs/verify/<behavior>.md`:
+prompt, expected observations, pass bar, run mechanics. Run only at an
+adoption PR or an incident-fix close (`docs/verify/README.md`).
+_Avoid_: eval (no harness runs it), test (tests are checks)
