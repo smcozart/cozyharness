@@ -102,13 +102,14 @@ the pasted `tests/validate.sh [<range>]` run, the adversary verdict, a human
 checkoff for flagged-risk classes, preview proof for UI tickets, and
 branch-protection proof for merge-path tickets.
 _Avoid_: approval (the human checkoff is one item of the gate, not the
-whole), CI gate (none exists until #1)
+whole), CI gate (the `gate` check runs the suite on PRs — one item
+of the merge gate, not the whole)
 
 **merge-path**:
-A diff touching `tests/validate.sh`, the synced trio, or AGENTS.md — the
-surfaces that enforce the merge gate itself. Only these owe the gate's
-branch-protection proof; every other close marks it "n/a — not a merge-path
-ticket".
+A diff touching `tests/validate.sh`, `.github/**`, the synced trio, or
+AGENTS.md — the surfaces that enforce the merge gate itself. Only these owe
+the gate's branch-protection proof; every other close marks it "n/a — not a
+merge-path ticket".
 _Avoid_: merge diff (any diff), gate surface (the file, not the change)
 
 **preview proof**:

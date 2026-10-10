@@ -134,7 +134,8 @@ or narrows content a negative check guards, in `tests/` or anywhere — is
 rejected unless it cites the issue retiring the rule; the fixer of a
 checking surface never loosens the check in the same diff. Tests check
 artifacts (deterministic, offline); behavioural findings are evals and stay
-in the eval ledger. The check list lives in the `## Commands` block of
+in the eval ledger. CI runs the same command on every PR into `main`
+(`.github/workflows/gate.yml`, check `gate`). The check list lives in the `## Commands` block of
 `AGENTS.md`, its token set verified by the suite itself (prose and grouping
 unverified). The orchestrator still QCs against the intent plus an
 adversarial pass.
@@ -145,15 +146,16 @@ Every diff is reviewed per `REVIEW.md` (code-review two axes + mandatory
 adversary pass on agent-produced diffs; findings tagged by risk class,
 resolved or carried with an owner — never by silence). The merge gate pastes:
 review resolution, `tests/validate.sh [<range>]` (Test §1), the adversary
-verdict, a human checkoff for flagged-risk classes (suite-checked surfaces,
-enumerated in the Deploy section of the canonical doc, CONTRIBUTING.md,
+verdict, a human checkoff for flagged-risk classes (suite-checked surfaces and
+`.github/**`, enumerated in the Deploy section of the canonical doc, CONTRIBUTING.md,
 `docs/agents/`, security/trust boundaries, irreversible ops), preview proof
 for UI tickets, and branch-protection proof for merge-path tickets. Branch
-protection is verified, not assumed: today it is absent (403 on this repo),
-so the human checkoff is the only enforcement until #1 unfreezes — a 401 is
-not evidence of absence, authenticate first.
-Everything else may land on a green gate; hooks/CI/release gates, when they
-exist (#1), are always human-authorized.
+protection is verified, not assumed: today `main` is protected but the CI
+`gate` check is advisory, not required, so the human checkoff stays the
+enforcement until the operator makes it required (#33) — a 401 is not
+evidence of absence, authenticate first.
+Everything else may land on a green gate; hooks/CI/release gates are always
+human-authorized.
 
 ## Maintain — the intake point
 

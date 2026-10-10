@@ -249,8 +249,9 @@ command is the contract, not any harness hook.
 5. **Tests are not evals.** `tests/validate.sh` checks artifacts (a file says
    X, a commit touches Y) — deterministic, offline, bash + git + python3
    stdlib. Findings with no textual footprint stay in the eval ledger (#8);
-   the eval harness waits on #1, as does CI wiring — the exit code is
-   CI-ready.
+   the eval harness waits on #1. CI runs the same command over the PR
+   range on every PR into `main` (`.github/workflows/gate.yml`, check
+   `gate`, #33).
 
 The check list lives in the `## Commands` block of `AGENTS.md`; the
 `agents-commands` check verifies the token set against `--list` (prose and
@@ -278,24 +279,26 @@ seam: this repo's ticket close, or a consumer's PR.
    standing link (consumer obligation; this repo has no UI surface);
    (f) branch-protection proof for tickets touching the merge path, others
    mark "n/a — not a merge-path ticket". Merge-path = any diff touching
-   `tests/validate.sh`, the synced trio, or AGENTS.md — the surfaces that
-   enforce the gate itself; everything else marks n/a.
+   `tests/validate.sh`, `.github/**`, the synced trio, or AGENTS.md — the
+   surfaces that enforce the gate itself; everything else marks n/a.
 3. **Branch protection is verified, not assumed.** Any merge-path close runs
-   `gh api repos/{owner}/{repo}/branches/main/protection` and pastes the
-   result: the protection fields, or the recorded absence. Today: absence —
-   the call returns 403 on this private free-plan repo, so the human
-   checkoff is the only enforcement until #1 unfreezes. An authentication
-   failure (401) is not evidence of absence — authenticate first. No online
+   `gh api repos/{owner}/{repo}/branches/main/protection` and
+   `gh api repos/{owner}/{repo}/rules/branches/main` and pastes both
+   results: the protection fields and rules, or the recorded absence.
+   Today: `main` is protected (pull request required, no force-push, no
+   deletion), but no status check is required — the `gate` check is
+   advisory, so the human checkoff stays the enforcement until the operator
+   makes `gate` required (#33). An authentication failure (401) is not
+   evidence of absence — authenticate first. No online
    check joins `tests/validate.sh` (Test §5); this proof stays manual.
 4. **Autonomy boundaries.**
 
    | Change class | Who merges |
    |---|---|
-   | Flagged risk: any surface a suite check asserts on (`tests/`, the synced trio, AGENTS.md, CONTRIBUTING.md, `intent/**`, `docs/adr/**`, `plugin/**`, `.agents/skills/**`, CONTEXT.md), plus `docs/agents/`, security/trust boundaries, and irreversible ops | Human checkoff, recorded in the thread, after a green gate |
+   | Flagged risk: any surface a suite check asserts on (`tests/`, the synced trio, AGENTS.md, CONTRIBUTING.md, `intent/**`, `docs/adr/**`, `plugin/**`, `.agents/skills/**`, CONTEXT.md), plus `.github/**`, `docs/agents/`, security/trust boundaries, and irreversible ops | Human checkoff, recorded in the thread, after a green gate |
    | Everything else (prose, approved intents/specs, internal refactors) | Agent may land; the gate's pasted evidence is the record |
 
-   Hooks/CI/release gates, when they exist (#1), are always
-   human-authorized.
+   Hooks/CI/release gates are always human-authorized.
 
 ## Maintain — closing the loop
 
