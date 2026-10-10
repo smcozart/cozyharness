@@ -11,6 +11,7 @@
 # Witnesses run against HEAD worktrees (committed state), not the dirty tree —
 # deliberate: a witness proves the check's logic, the default run proves the tree.
 set -uo pipefail
+unset GIT_DIR GIT_WORK_TREE  # #45: a hook-exported GIT_DIR makes rev-parse return cwd (tests/), not the root
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)" || exit 2
 
 FO=plugin/skills/factory-orchestrator/SKILL.md
@@ -163,7 +164,7 @@ default_run() {
   for c in t1-trust-wording t1-log-clobber t1-spawn-session; do run "$c" "$FO"; done
   for c in t3-label-drift t3-precedence; do run "$c" AGENTS.md; done
   local n; n=$(list_checks | wc -l | tr -d ' ')
-  echo "$((n - fail_count)) ok, $fail_count failed"
+  echo "$((n - fail_count)) ok, $fail_count failed (range: $range)"
 }
 
 # ---------- witness mode ----------
@@ -203,6 +204,11 @@ witness_run() {
   # mutation witnesses — one-line mutations on a worktree copy of HEAD, reset between rows
   worktree HEAD; local m=$W
   expect ok baseline stage-parity "$m"
+  # #45: the whole gate under a hook-exported GIT_DIR in a linked worktree (end-to-end, not one check)
+  wn=$((wn+1))
+  if (cd "$m" && GIT_DIR=$(git rev-parse --git-dir) bash tests/validate.sh HEAD..HEAD >/dev/null 2>&1)
+  then echo "witness ok: gate @GIT_DIR-linked-worktree expected ok"
+  else echo "witness FAIL: gate @GIT_DIR-linked-worktree expected ok, got FAIL"; wfail=1; fi
   (cd "$m" && python3 -c "p='intent/9-test-stage/intent.md';s=open(p).read().replace('#9','#8');open(p,'w').write(s)")
   expect FAIL mutation intent-layout "$m"; reset_wt "$m"
   : >"$m/docs/adr/0009-x.md"
